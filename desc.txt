@@ -1,0 +1,58 @@
+category : 부품 분류
+- CPU
+- COOLER
+- MOTHERBOARD
+- MEMORY
+- GPU
+- HDD / SSD
+- CASE
+
+brand : 제조사
+
+name : 제품명
+
+pricae : 가격 (단위 : 원)
+
+rating_count : 후기 수
+
+specs : 제품 세부사양 (JSON 문자열)
+- CPU
+   ㄴ Core Clock : 기본 클럭 속도
+   ㄴ Boost Clock : 최대 부스트 클럭 속도
+   ㄴ Socket : CPU 핀 배열 규격(MOTHERBOARD - Socket)
+   ㄴ Core Count : 물리적 코어 개수
+   ㄴ Microarchitecture : CPU 아키텍쳐 ex) Zen 5
+   ㄴ TDP : 열설계쩐력 (단위 : W 와트) (파워 전력 용량 산정)
+- COOLER
+   ㄴ Color : 제품 색상
+   ㄴ Radiator : 수냉쿨러의 라디에이터 규격(공랭은 null)
+   ㄴ Type : 쿨러의 종류 (수랭 vs 공랭)
+- MOTHERBOARD
+   ㄴ Color : 제품 색상
+   ㄴ Form Factor : 폼팩터 규격 (CASE - Form Factor)
+   ㄴ Memory Max : 최대 메모리 용량 (MEMORY - Modules와 비교)
+   ㄴ Memory Slots : 장착 가능한 최대 RAM 슬롯 (MEMORY - Modules와 비교)
+   ㄴ Socket : CPU 소켓 규격(CPU - Socket)
+- MEMORY
+   ㄴ Color : 제품 색상
+   ㄴ Modules : 구성 모듈 용량 및 수량 ex)16GB x 2
+   ㄴ Speed : 메모리 동작 속도 ex) DDR5
+- GPU
+   ㄴ Boost Clock :최대 부스트 클럭 속도
+   ㄴ Chipset : 그래픽 칩셋 제조사 및 모델명 ex: RTX 4070
+   ㄴ Color : 제품 색상
+   ㄴ Core Clock : 기본 클럭 속도
+   ㄴ Length : 그래픽카드 물리적 길이(단위 : mm) (CASE - Max GPU Length)
+   ㄴ Memory : 비디오 메모리 (VRAM) 용량
+- HDD / SSD
+   ㄴ Capacity : 저장 공간 용량
+   ㄴ Form Factor : 저장장치 크기 및 장착 규격
+   ㄴ Type : (HDD only) 인터페이스 및 방식 ex) NVMe, SATA
+- CASE
+   ㄴ Color : 제품 색상
+   ㄴ Internal 3.5\ Bays : 3.5인치 HDD 내부 장착 베이 개수
+   ㄴ Side Panel : 측면 패널 재질 ex) Tempered Glass
+   ㄴ Max GPU Length : 장착 가능한 GPU 최대 길이
+   ㄴ Form Factor : 폼팩터 규격 (MOTHERBOARD - Form Factor)
+
+image_url : 원본 이미지 URL
