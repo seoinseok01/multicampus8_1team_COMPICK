@@ -138,7 +138,7 @@ class CompickApplicationTests {
 				org.hamcrest.Matchers.containsString("href=\"/cart\"")
 			))
 			.andExpect(content().string(
-				org.hamcrest.Matchers.containsString("href=\"/members/login\"")
+				org.hamcrest.Matchers.containsString("href=\"/login\"")
 			))
 			.andExpect(content().string(
 				org.hamcrest.Matchers.containsString(
@@ -195,7 +195,7 @@ class CompickApplicationTests {
 		mockMvc.perform(get("/"))
 			.andExpect(status().isOk())
 			.andExpect(content().string(
-				org.hamcrest.Matchers.containsString("href=\"/members/login\"")
+				org.hamcrest.Matchers.containsString("href=\"/login\"")
 			))
 			.andExpect(content().string(
 				org.hamcrest.Matchers.not(
@@ -221,7 +221,7 @@ class CompickApplicationTests {
 			))
 			.andExpect(content().string(
 				org.hamcrest.Matchers.not(
-					org.hamcrest.Matchers.containsString("href=\"/members/login\"")
+					org.hamcrest.Matchers.containsString("href=\"/login\"")
 				)
 			));
 	}
@@ -230,6 +230,6 @@ class CompickApplicationTests {
 	void myPageRedirectsAnonymousUserToLogin() throws Exception {
 		mockMvc.perform(get("/mypage"))
 			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrl("http://localhost/members/login"));
+			.andExpect(redirectedUrl("http://localhost/login"));
 	}
 }
