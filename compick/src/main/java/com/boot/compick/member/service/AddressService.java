@@ -30,26 +30,40 @@ public class AddressService {
     public AddressForm getForm(String loginId, Long addressId) {
         Address address = findOwned(loginId, addressId);
         AddressForm form = new AddressForm();
-        form.setAddressName(address.getAddressName()); form.setRecipientName(address.getRecipientName());
-        form.setRecipientPhone(address.getRecipientPhone()); form.setZipCode(address.getZipCode());
-        form.setBasicAddress(address.getBasicAddress()); form.setDetailAddress(address.getDetailAddress());
+        form.setAddressName(address.getAddressName());
+        form.setRecipientName(address.getRecipientName());
+        form.setRecipientPhone(address.getRecipientPhone());
+        form.setZipCode(address.getZipCode());
+        form.setBasicAddress(address.getBasicAddress());
+        form.setDetailAddress(address.getDetailAddress());
         form.setDefaultAddress(address.isDefault());
         return form;
     }
 
     @Transactional
-    public void save(String loginId, Long addressId, AddressForm form) {
+    public Address save(String loginId, Long addressId, AddressForm form) {
         Member member = memberService.findActiveByLoginId(loginId);
-        if (form.isDefaultAddress()) clearDefaults(member.getId(), addressId);
+        if (form.isDefaultAddress()) {
+            clearDefaults(member.getId(), addressId);
+        }
         if (addressId == null) {
             boolean first = addressRepository.findAllByMemberIdOrderByDefaultYnDescIdDesc(member.getId()).isEmpty();
-            addressRepository.save(new Address(member, form.getAddressName(), form.getRecipientName(), form.getRecipientPhone(),
+            return addressRepository.save(new Address(member, form.getAddressName(), form.getRecipientName(), form.getRecipientPhone(),
                     form.getZipCode(), form.getBasicAddress(), form.getDetailAddress(), first || form.isDefaultAddress()));
         } else {
             Address address = findOwned(loginId, addressId);
             address.update(form.getAddressName(), form.getRecipientName(), form.getRecipientPhone(), form.getZipCode(),
                     form.getBasicAddress(), form.getDetailAddress(), form.isDefaultAddress());
+            return address;
         }
+    }
+
+    @Transactional
+    public Address setDefault(String loginId, Long addressId) {
+        Address address = findOwned(loginId, addressId);
+        clearDefaults(address.getMember().getId(), addressId);
+        address.makeDefault();
+        return address;
     }
 
     private void clearDefaults(Long memberId, Long exceptId) {
@@ -64,8 +78,10 @@ public class AddressService {
         Long memberId = address.getMember().getId();
         addressRepository.delete(address);
         addressRepository.flush();
-        if (wasDefault) addressRepository.findAllByMemberIdOrderByDefaultYnDescIdDesc(memberId).stream()
-                .findFirst()
-                .ifPresent(Address::makeDefault);
+        if (wasDefault) {
+            addressRepository.findAllByMemberIdOrderByDefaultYnDescIdDesc(memberId).stream()
+                    .findFirst()
+                    .ifPresent(Address::makeDefault);
+        }
     }
 }

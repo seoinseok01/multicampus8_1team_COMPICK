@@ -1,1 +1,88 @@
-<!DOCTYPE html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>배송지 등록 | COMPICK</title><link rel="stylesheet" th:href="@{/css/member.css}"></head><body><div th:replace="~{fragments/header :: header}"></div><main class="page"><h1 th:text="${addressId == null ? '배송지 등록' : '배송지 수정'}"></h1><p class="subtitle">주문에 사용할 배송지 정보를 입력합니다.</p><section class="card form-card"><h2>배송지 정보</h2><form th:action="${addressId == null} ? @{/member/addresses} : @{/member/addresses/{id}(id=${addressId})}" th:object="${addressForm}" method="post"><label>배송지명<input th:field="*{addressName}" placeholder="예: 집, 회사"><small class="error" th:errors="*{addressName}"></small></label><label>받는 사람<input th:field="*{recipientName}" placeholder="이름 입력"></label><label>휴대전화<input th:field="*{recipientPhone}" placeholder="010-0000-0000"><small class="error" th:errors="*{recipientPhone}"></small></label><label>우편번호<div class="input-action"><input th:field="*{zipCode}" placeholder="우편번호"><button type="button" class="secondary" onclick="findAddress()">주소 검색</button></div><small class="error" th:errors="*{zipCode}"></small></label><label>기본 주소<input th:field="*{basicAddress}" placeholder="주소 검색 결과"></label><label>상세 주소<input th:field="*{detailAddress}" placeholder="상세 주소 입력"></label><label class="check"><input type="checkbox" th:field="*{defaultAddress}"> 기본 배송지로 설정</label><div class="actions"><a class="secondary button" th:href="@{/member/addresses}">취소</a><button class="primary">등록 완료</button></div></form></section></main><script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script><script>function findAddress(){new daum.Postcode({oncomplete:d=>{document.getElementById('zipCode').value=d.zonecode;document.getElementById('basicAddress').value=d.roadAddress||d.jibunAddress;document.getElementById('detailAddress').focus();}}).open();}</script></body></html>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+            배송지 등록 | COMPICK
+        </title>
+        <link rel="stylesheet" th:href="@{/css/member.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/header :: header}">
+        </div>
+        <main class="page">
+            <h1 th:text="${addressId == null ? '배송지 등록' : '배송지 수정'}">
+            </h1>
+            <p class="subtitle">
+                주문에 사용할 배송지 정보를 입력합니다.
+            </p>
+            <section class="card form-card">
+                <h2>
+                    배송지 정보
+                </h2>
+                <form th:action="${addressId == null} ? @{/mypage/addresses} : @{/mypage/addresses/{id}(id=${addressId})}" th:object="${addressForm}" method="post">
+                    <label>
+                        배송지명
+                        <input th:field="*{addressName}" placeholder="예: 집, 회사">
+                        <small class="error" th:errors="*{addressName}">
+                        </small>
+                    </label>
+                    <label>
+                        받는 사람
+                        <input th:field="*{recipientName}" placeholder="이름 입력">
+                    </label>
+                    <label>
+                        휴대전화
+                        <input th:field="*{recipientPhone}" placeholder="010-0000-0000">
+                        <small class="error" th:errors="*{recipientPhone}">
+                        </small>
+                    </label>
+                    <label>
+                        우편번호
+                        <div class="input-action">
+                            <input th:field="*{zipCode}" placeholder="우편번호">
+                            <button type="button" class="secondary" onclick="findAddress()">
+                                주소 검색
+                            </button>
+                        </div>
+                        <small class="error" th:errors="*{zipCode}">
+                        </small>
+                    </label>
+                    <label>
+                        기본 주소
+                        <input th:field="*{basicAddress}" placeholder="주소 검색 결과">
+                    </label>
+                    <label>
+                        상세 주소
+                        <input th:field="*{detailAddress}" placeholder="상세 주소 입력">
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" th:field="*{defaultAddress}">
+                        기본 배송지로 설정
+                    </label>
+                    <div class="actions">
+                        <a class="secondary button" th:href="@{/mypage/addresses}">
+                            취소
+                        </a>
+                        <button class="primary">
+                            등록 완료
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </main>
+        <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+        <script>
+            function findAddress() {
+                new daum.Postcode({
+                    oncomplete: (data) => {
+                        document.getElementById('zipCode').value = data.zonecode;
+                        document.getElementById('basicAddress').value =
+                            data.roadAddress || data.jibunAddress;
+                        document.getElementById('detailAddress').focus();
+                    }
+                }).open();
+            }
+        </script>
+    </body>
+</html>

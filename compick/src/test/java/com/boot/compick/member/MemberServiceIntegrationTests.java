@@ -7,6 +7,7 @@ import com.boot.compick.member.entity.MemberStatus;
 import com.boot.compick.member.entity.EmailVerification;
 import com.boot.compick.member.entity.VerificationPurpose;
 import com.boot.compick.member.repository.EmailVerificationRepository;
+import com.boot.compick.member.repository.SocialAccountRepository;
 import com.boot.compick.member.service.AddressService;
 import com.boot.compick.member.service.EmailVerificationService;
 import com.boot.compick.member.service.MemberService;
@@ -39,6 +40,7 @@ class MemberServiceIntegrationTests {
     @Autowired EmailVerificationService emailVerificationService;
     @Autowired PasswordEncoder passwordEncoder;
     @Autowired SocialAccountService socialAccountService;
+    @Autowired SocialAccountRepository socialAccountRepository;
 
     @Test
     void joinProfilePasswordAndWithdrawalFlow() {
@@ -86,21 +88,21 @@ class MemberServiceIntegrationTests {
 
     @Test
     void memberPagesRenderSuccessfully() throws Exception {
-        mockMvc.perform(get("/member/login")).andExpect(status().isOk()).andExpect(view().name("member/login"));
-        mockMvc.perform(get("/member/join")).andExpect(status().isOk()).andExpect(view().name("member/join"));
-        mockMvc.perform(get("/member/find-id")).andExpect(status().isOk()).andExpect(view().name("member/find-id"));
-        mockMvc.perform(get("/member/password-reset")).andExpect(status().isOk()).andExpect(view().name("member/password-reset"));
+        mockMvc.perform(get("/login")).andExpect(status().isOk()).andExpect(view().name("member/login"));
+        mockMvc.perform(get("/members/signup")).andExpect(status().isOk()).andExpect(view().name("member/join"));
+        mockMvc.perform(get("/members/find-id")).andExpect(status().isOk()).andExpect(view().name("member/find-id"));
+        mockMvc.perform(get("/members/password-reset")).andExpect(status().isOk()).andExpect(view().name("member/password-reset"));
         mockMvc.perform(get("/privacy-policy")).andExpect(status().isOk()).andExpect(view().name("privacy-policy"));
         memberService.join(joinForm("screen01", "screen@compick.com"));
-        mockMvc.perform(get("/member/mypage").with(user("screen01").roles("USER")))
+        mockMvc.perform(get("/mypage").with(user("screen01").roles("USER")))
                 .andExpect(status().isOk()).andExpect(view().name("member/mypage"));
-        mockMvc.perform(get("/member/addresses").with(user("screen01").roles("USER")))
+        mockMvc.perform(get("/mypage/addresses").with(user("screen01").roles("USER")))
                 .andExpect(status().isOk()).andExpect(view().name("member/address-list"));
     }
 
     @Test
-    void successfulJoinLogsTheNewMemberIn() throws Exception {
-        mockMvc.perform(post("/member/join").with(csrf())
+    void successfulJoinRedirectsToLogin() throws Exception {
+        mockMvc.perform(post("/members/signup").with(csrf())
                         .param("loginId", "autologin01")
                         .param("password", "Abc!1234")
                         .param("passwordConfirm", "Abc!1234")
@@ -109,9 +111,9 @@ class MemberServiceIntegrationTests {
                         .param("phone", "010-1234-5678")
                         .param("termsAccepted", "true"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/member/mypage"))
-                .andExpect(request().sessionAttribute("SPRING_SECURITY_CONTEXT",
-                        org.hamcrest.Matchers.notNullValue()));
+                .andExpect(redirectedUrl("/login"));
+        assertThat(memberService.findActiveByLoginId("autologin01").getEmail())
+                .isEqualTo("autologin@compick.com");
     }
 
     @Test
@@ -126,19 +128,34 @@ class MemberServiceIntegrationTests {
 
     @Test
     void googleLoginCreatesAndReusesTheSameMember() {
-        Member first = socialAccountService.loginGoogle("google-sub-123", "GoogleUser@Example.com", "구글회원");
-        Member second = socialAccountService.loginGoogle("google-sub-123", "googleuser@example.com", "구글회원");
+        SocialAccountService.GoogleLoginResult firstLogin = socialAccountService.loginGoogleWithResult(
+                "google-sub-123", "GoogleUser@Example.com", "구글회원");
+        Member first = firstLogin.member();
+        assertThat(firstLogin.credentialSetupRequired()).isTrue();
+
+        socialAccountService.setSocialPassword(first.getLoginId(), "Abc!1234");
+        SocialAccountService.GoogleLoginResult secondLogin = socialAccountService.loginGoogleWithResult(
+                "google-sub-123", "googleuser@example.com", "구글회원");
+        Member second = secondLogin.member();
         assertThat(first.getId()).isEqualTo(second.getId());
         assertThat(first.getLoginId()).startsWith("google_");
         assertThat(first.getEmail()).isEqualTo("googleuser@example.com");
+        assertThat(passwordEncoder.matches("Abc!1234", second.getPasswordHash())).isTrue();
+        assertThat(secondLogin.credentialSetupRequired()).isFalse();
+
+        assertThat(memberService.withdraw(second.getLoginId(), "Abc!1234")).isTrue();
+        assertThat(socialAccountRepository.findByProviderAndProviderUserId(
+                com.boot.compick.member.entity.SocialProvider.GOOGLE, "google-sub-123")).isEmpty();
     }
 
     @Test
     void googleLoginLinksAnExistingMemberWithTheSameEmail() {
         memberService.join(joinForm("localgoogle", "linked@example.com"));
         Member local = memberService.findActiveByLoginId("localgoogle");
-        Member linked = socialAccountService.loginGoogle("google-sub-linked", "linked@example.com", "연결회원");
-        assertThat(linked.getId()).isEqualTo(local.getId());
+        SocialAccountService.GoogleLoginResult linked = socialAccountService.loginGoogleWithResult(
+                "google-sub-linked", "linked@example.com", "연결회원");
+        assertThat(linked.member().getId()).isEqualTo(local.getId());
+        assertThat(linked.credentialSetupRequired()).isFalse();
     }
 
     private JoinForm joinForm(String loginId, String email) {

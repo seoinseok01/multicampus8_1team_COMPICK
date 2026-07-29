@@ -34,6 +34,9 @@ public class SocialAccount {
     @Column(name = "provider_email", nullable = false, length = 100)
     private String providerEmail;
 
+    @Column(name = "setup_completed", nullable = false, length = 1)
+    private String setupCompletedYn = "N";
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -42,12 +45,16 @@ public class SocialAccount {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public SocialAccount(Member member, SocialProvider provider, String providerUserId, String providerEmail) {
+    public SocialAccount(Member member, SocialProvider provider, String providerUserId,
+                         String providerEmail, boolean setupCompleted) {
         this.member = member;
         this.provider = provider;
         this.providerUserId = providerUserId;
         this.providerEmail = providerEmail;
+        this.setupCompletedYn = setupCompleted ? "Y" : "N";
     }
 
     public void updateEmail(String email) { this.providerEmail = email; }
+    public boolean isSetupCompleted() { return "Y".equals(setupCompletedYn); }
+    public void completeSetup() { this.setupCompletedYn = "Y"; }
 }

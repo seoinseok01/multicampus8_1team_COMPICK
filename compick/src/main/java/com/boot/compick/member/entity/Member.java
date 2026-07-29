@@ -68,11 +68,6 @@ public class Member {
         this.passwordHash = passwordHash;
     }
 
-    public void setLoginCredentials(String loginId, String passwordHash) {
-        this.loginId = loginId;
-        this.passwordHash = passwordHash;
-    }
-
     public void withdraw() {
         this.status = MemberStatus.WITHDRAWN;
     }

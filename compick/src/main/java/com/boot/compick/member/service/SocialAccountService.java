@@ -22,11 +22,6 @@ public class SocialAccountService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Member loginGoogle(String providerUserId, String rawEmail, String name) {
-        return loginGoogleWithResult(providerUserId, rawEmail, name).member();
-    }
-
-    @Transactional
     public GoogleLoginResult loginGoogleWithResult(String providerUserId, String rawEmail, String name) {
         String email = rawEmail.trim().toLowerCase(Locale.ROOT);
         return socialAccountRepository.findByProviderAndProviderUserId(SocialProvider.GOOGLE, providerUserId)
@@ -34,8 +29,7 @@ public class SocialAccountService {
                     if (account.getMember().getStatus() != MemberStatus.ACTIVE)
                         throw new IllegalArgumentException("사용할 수 없는 회원 계정입니다.");
                     account.updateEmail(email);
-                    return new GoogleLoginResult(account.getMember(),
-                            account.getMember().getLoginId().startsWith("google_"));
+                    return new GoogleLoginResult(account.getMember(), !account.isSetupCompleted());
                 })
                 .orElseGet(() -> createOrLink(providerUserId, email, name));
     }
@@ -53,18 +47,19 @@ public class SocialAccountService {
         }
         if (member.getStatus() != MemberStatus.ACTIVE)
             throw new IllegalArgumentException("사용할 수 없는 회원 계정입니다.");
-        socialAccountRepository.save(new SocialAccount(member, SocialProvider.GOOGLE, providerUserId, email));
+        socialAccountRepository.save(new SocialAccount(
+                member, SocialProvider.GOOGLE, providerUserId, email, !credentialSetupRequired));
         return new GoogleLoginResult(member, credentialSetupRequired);
     }
 
     @Transactional
-    public void setLoginCredentials(String currentLoginId, String loginId, String rawPassword) {
+    public void setSocialPassword(String currentLoginId, String rawPassword) {
         Member member = memberRepository.findByLoginId(currentLoginId)
                 .orElseThrow(() -> new IllegalArgumentException("회원 계정을 찾을 수 없습니다."));
-        memberRepository.findByLoginId(loginId)
-                .filter(found -> !found.getId().equals(member.getId()))
-                .ifPresent(found -> { throw new IllegalArgumentException("이미 사용 중인 아이디입니다."); });
-        member.setLoginCredentials(loginId, passwordEncoder.encode(rawPassword));
+        SocialAccount account = socialAccountRepository.findByMemberIdAndProvider(member.getId(), SocialProvider.GOOGLE)
+                .orElseThrow(() -> new IllegalArgumentException("Google 연결 정보를 찾을 수 없습니다."));
+        member.changePassword(passwordEncoder.encode(rawPassword));
+        account.completeSetup();
     }
 
     private String uniqueLoginId(String providerUserId) {

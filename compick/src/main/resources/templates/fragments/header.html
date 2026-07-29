@@ -1,28 +1,54 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<body>
-<header th:fragment="header" class="site-header">
-  <a class="logo" th:href="@{/}">COMPICK</a>
-  <nav>
-    <a href="#">부품 쇼핑</a>
-    <a href="#">견적 쇼핑</a>
-    <a href="#">추천 견적</a>
-    <a href="#">AI 견적</a>
-  </nav>
-  <nav class="right">
-    <a href="#">장바구니</a>
-    <a th:href="@{/member/mypage}">마이페이지</a>
-    <a th:if="${#authorization.expression('isAnonymous()')}" th:href="@{/member/login}">로그인</a>
-    <form th:if="${#authorization.expression('isAuthenticated()')}" th:action="@{/member/logout}" method="post">
-      <button class="link">로그아웃</button>
-    </form>
-  </nav>
-</header>
-<aside th:fragment="mypage-menu(active)" class="side-menu">
-  <h2>마이페이지</h2>
-  <a th:classappend="${active == 'profile'} ? active" th:href="@{/member/mypage}">회원정보</a>
-  <a th:classappend="${active == 'address'} ? active" th:href="@{/member/addresses}">배송지 관리</a>
-  <a href="#">주문 내역</a>
-</aside>
-</body>
+    <body>
+        <header th:fragment="header" class="site-header">
+            <a class="logo" th:href="@{/}">
+                COMPICK
+            </a>
+            <nav>
+                <a href="#">
+                    부품 쇼핑
+                </a>
+                <a href="#">
+                    견적 쇼핑
+                </a>
+                <a href="#">
+                    추천 견적
+                </a>
+                <a href="#">
+                    AI 견적
+                </a>
+            </nav>
+            <nav class="right">
+                <a href="#">
+                    장바구니
+                </a>
+                <a th:href="@{/mypage}">
+                    마이페이지
+                </a>
+                <a th:if="${#authorization.expression('isAnonymous()')}" th:href="@{/login}">
+                    로그인
+                </a>
+                <form th:if="${#authorization.expression('isAuthenticated()')}" th:action="@{/logout}" method="post">
+                    <button class="link">
+                        로그아웃
+                    </button>
+                </form>
+            </nav>
+        </header>
+        <aside th:fragment="mypage-menu(active)" class="side-menu">
+            <h2>
+                마이페이지
+            </h2>
+            <a th:classappend="${active == 'profile'} ? active" th:href="@{/mypage}">
+                회원정보
+            </a>
+            <a th:classappend="${active == 'address'} ? active" th:href="@{/mypage/addresses}">
+                배송지 관리
+            </a>
+            <a href="#">
+                주문 내역
+            </a>
+        </aside>
+    </body>
 </html>

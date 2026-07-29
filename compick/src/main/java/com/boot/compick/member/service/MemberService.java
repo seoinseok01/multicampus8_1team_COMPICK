@@ -4,6 +4,7 @@ import com.boot.compick.member.dto.*;
 import com.boot.compick.member.entity.Member;
 import com.boot.compick.member.entity.MemberStatus;
 import com.boot.compick.member.repository.MemberRepository;
+import com.boot.compick.member.repository.SocialAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.Locale;
 @Transactional(readOnly = true)
 public class MemberService {
     private final MemberRepository memberRepository;
+    private final SocialAccountRepository socialAccountRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -64,6 +66,10 @@ public class MemberService {
         return !memberRepository.existsByLoginId(loginId);
     }
 
+    public boolean isEmailAvailable(String rawEmail) {
+        return !memberRepository.existsByEmail(rawEmail.trim().toLowerCase(Locale.ROOT));
+    }
+
     public ProfileForm getProfile(String loginId) {
         Member member = findActiveByLoginId(loginId);
         ProfileForm form = new ProfileForm();
@@ -86,9 +92,11 @@ public class MemberService {
     }
 
     @Transactional
-    public void withdraw(String loginId, String password) {
+    public boolean withdraw(String loginId, String password) {
         Member member = findActiveByLoginId(loginId);
         if (!passwordEncoder.matches(password, member.getPasswordHash())) throw new IllegalArgumentException("비밀번호가 올바르지 않습니다.");
+        boolean socialConnectionRemoved = socialAccountRepository.deleteByMemberId(member.getId()) > 0;
         member.withdraw();
+        return socialConnectionRemoved;
     }
 }

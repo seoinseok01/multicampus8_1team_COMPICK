@@ -19,12 +19,37 @@ public class CompickOidcUser implements OidcUser {
         this.credentialSetupRequired = credentialSetupRequired;
     }
 
-    public boolean isCredentialSetupRequired() { return credentialSetupRequired; }
+    public boolean isCredentialSetupRequired() {
+        return credentialSetupRequired;
+    }
 
-    @Override public Map<String, Object> getClaims() { return delegate.getClaims(); }
-    @Override public OidcUserInfo getUserInfo() { return delegate.getUserInfo(); }
-    @Override public OidcIdToken getIdToken() { return delegate.getIdToken(); }
-    @Override public Collection<? extends GrantedAuthority> getAuthorities() { return delegate.getAuthorities(); }
-    @Override public Map<String, Object> getAttributes() { return delegate.getAttributes(); }
-    @Override public String getName() { return loginId; }
+    @Override
+    public Map<String, Object> getClaims() {
+        return delegate.getClaims();
+    }
+
+    @Override
+    public OidcUserInfo getUserInfo() {
+        return delegate.getUserInfo();
+    }
+
+    @Override
+    public OidcIdToken getIdToken() {
+        return delegate.getIdToken();
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return delegate.getAuthorities();
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return delegate.getAttributes();
+    }
+
+    @Override
+    public String getName() {
+        return loginId;
+    }
 }

@@ -1,6 +1,87 @@
-<!DOCTYPE html><html lang="ko" xmlns:th="http://www.thymeleaf.org"><head><meta charset="UTF-8"><title>로그인 | COMPICK</title><link rel="stylesheet" th:href="@{/css/member.css}"><link rel="stylesheet" th:href="@{/css/social-login.css}"></head><body>
-<div th:replace="~{fragments/header :: header}"></div><main class="page"><h1>로그인</h1><p class="subtitle">아이디와 비밀번호로 로그인합니다.</p>
-<section class="card narrow"><h2>COMPICK 로그인</h2><div class="notice success" th:if="${message}" th:text="${message}"></div><div class="notice error" th:if="${param.error}">아이디 또는 비밀번호를 확인해 주세요.</div><div class="notice error" th:if="${param.oauthError}">Google 로그인에 실패했습니다. 다시 시도해 주세요.</div><div class="notice success" th:if="${param.logout}">로그아웃되었습니다.</div>
-<form th:action="@{/member/login}" method="post"><label>아이디<input name="loginId" autocomplete="username" placeholder="아이디 입력" required></label><label>비밀번호<input type="password" name="password" autocomplete="current-password" placeholder="비밀번호 입력" required></label><label class="check"><input type="checkbox" name="remember-me"> 로그인 상태 유지</label><button class="primary">로그인</button></form>
-<div th:if="${googleLoginEnabled}" class="social-login"><span>또는</span><a class="google-button" th:href="@{/oauth2/authorization/google}"><b>G</b> Google로 계속하기</a></div>
-<p class="links"><a th:href="@{/member/find-id}">아이디 찾기</a> · <a th:href="@{/member/password-reset}">비밀번호 찾기</a> · <a th:href="@{/member/join}">회원가입</a></p></section></main></body></html>
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+            로그인 | COMPICK
+        </title>
+        <link rel="stylesheet" th:href="@{/css/member.css}">
+        <link rel="stylesheet" th:href="@{/css/social-login.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/header :: header}">
+        </div>
+        <main class="page">
+            <h1>
+                로그인
+            </h1>
+            <p class="subtitle">
+                아이디와 비밀번호로 로그인합니다.
+            </p>
+            <section class="card narrow">
+                <h2>
+                    COMPICK 로그인
+                </h2>
+                <div class="notice success" th:if="${message}" th:text="${message}">
+                </div>
+                <div class="notice" th:if="${googleConnectionRemoved}">
+                    COMPICK의 Google 연결 정보는 삭제되었습니다. Google 계정의 서비스 연결도 해제하려면
+                    <a style="color:#2563eb;text-decoration:underline" href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">
+                        Google 계정 연결 관리
+                    </a>
+                    에서 삭제해 주세요.
+                </div>
+                <div class="notice error" th:if="${param.error}">
+                    아이디 또는 비밀번호를 확인해 주세요.
+                </div>
+                <div class="notice error" th:if="${param.oauthError}">
+                    Google 로그인에 실패했습니다. 다시 시도해 주세요.
+                </div>
+                <div class="notice success" th:if="${param.logout}">
+                    로그아웃되었습니다.
+                </div>
+                <form th:action="@{/login}" method="post">
+                    <label>
+                        아이디
+                        <input name="loginId" autocomplete="username" placeholder="아이디 입력" required>
+                    </label>
+                    <label>
+                        비밀번호
+                        <input type="password" name="password" autocomplete="current-password" placeholder="비밀번호 입력" required>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" name="remember-me">
+                        로그인 상태 유지
+                    </label>
+                    <button class="primary">
+                        로그인
+                    </button>
+                </form>
+                <div th:if="${googleLoginEnabled}" class="social-login">
+                    <span>
+                        또는
+                    </span>
+                    <a class="google-button" th:href="@{/oauth2/authorization/google}">
+                        <b>
+                            G
+                        </b>
+                        Google로 계속하기
+                    </a>
+                </div>
+                <p class="links">
+                    <a th:href="@{/members/find-id}">
+                        아이디 찾기
+                    </a>
+                    ·
+                    <a th:href="@{/members/password-reset}">
+                        비밀번호 찾기
+                    </a>
+                    ·
+                    <a th:href="@{/members/signup}">
+                        회원가입
+                    </a>
+                </p>
+            </section>
+        </main>
+    </body>
+</html>

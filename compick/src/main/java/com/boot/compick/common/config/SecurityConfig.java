@@ -30,35 +30,37 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/privacy-policy", "/member/login", "/member/join", "/member/check-login-id", "/oauth2/**", "/login/oauth2/**",
-                                "/member/find-id/**", "/member/password-reset/**", "/css/**").permitAll()
+                        .requestMatchers("/", "/privacy-policy", "/login", "/members/signup",
+                                "/api/members/check-login-id", "/api/members/check-email",
+                                "/oauth2/**", "/login/oauth2/**", "/members/find-id/**",
+                                "/members/password-reset/**", "/css/**").permitAll()
                         .anyRequest().authenticated())
                 .userDetailsService(memberUserDetailsService)
                 .formLogin(form -> form
-                        .loginPage("/member/login")
-                        .loginProcessingUrl("/member/login")
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")
                         .usernameParameter("loginId")
                         .passwordParameter("password")
                         .defaultSuccessUrl("/", true)
-                        .failureUrl("/member/login?error"))
+                        .failureUrl("/login?error"))
                 .rememberMe(remember -> remember
                         .rememberMeParameter("remember-me")
                         .userDetailsService(memberUserDetailsService))
                 .logout(logout -> logout
-                        .logoutUrl("/member/logout")
-                        .logoutSuccessUrl("/member/login?logout")
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/?logout")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID", "remember-me"));
         if (clientRegistrations.getIfAvailable() != null) {
             http.oauth2Login(oauth -> oauth
-                    .loginPage("/member/login")
+                    .loginPage("/login")
                     .userInfoEndpoint(userInfo -> userInfo.oidcUserService(compickOidcUserService))
                     .successHandler((request, response, authentication) -> {
                         String target = authentication.getPrincipal() instanceof CompickOidcUser user
-                                && user.isCredentialSetupRequired() ? "/member/social-credentials" : "/";
+                                && user.isCredentialSetupRequired() ? "/members/social-password" : "/";
                         response.sendRedirect(request.getContextPath() + target);
                     })
-                    .failureUrl("/member/login?oauthError"));
+                    .failureUrl("/login?oauthError"));
         }
         return http.build();
     }
