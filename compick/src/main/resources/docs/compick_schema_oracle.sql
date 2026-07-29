@@ -92,6 +92,7 @@ CREATE TABLE PRODUCT (
     brand                  VARCHAR2(100)  NOT NULL,
     model_name             VARCHAR2(150)  NOT NULL,
     price                  NUMBER(12)     NOT NULL,
+    rating_count           NUMBER(10)     DEFAULT 0 NOT NULL,
     stock_quantity         NUMBER(10)     DEFAULT 0 NOT NULL,
     product_description    CLOB,
     image_url              VARCHAR2(1000),
@@ -113,6 +114,8 @@ CREATE TABLE PRODUCT (
         FOREIGN KEY (category_id) REFERENCES CATEGORY (category_id),
     CONSTRAINT ck_product_price
         CHECK (price >= 0),
+    CONSTRAINT ck_product_rating_count
+        CHECK (rating_count >= 0),
     CONSTRAINT ck_product_stock
         CHECK (stock_quantity >= 0),
     CONSTRAINT ck_product_sales_status
