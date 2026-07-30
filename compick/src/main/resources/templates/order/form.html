@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>주문서 작성 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<link rel="stylesheet" th:href="@{/css/order.css}">
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script th:src="@{/js/order.js}" defer></script>
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+
+	<main class="order-page">
+		<header class="order-title">
+			<p>CHECKOUT</p>
+			<h1>주문서 작성</h1>
+			<span>배송지와 주문 상품을 확인하고 결제를 진행해 주세요.</span>
+		</header>
+
+		<div class="checkout-layout">
+			<div class="order-sections">
+				<section class="order-card" aria-labelledby="delivery-title">
+					<header class="card-heading">
+						<div><b>01</b><h2 id="delivery-title">배송지</h2></div>
+						<button type="button" class="line-button" data-toast="배송지 관리 기능은 다음 단계에서 연동됩니다.">배송지 변경</button>
+					</header>
+					<div class="address-box">
+						<i aria-hidden="true">✓</i>
+						<div>
+							<p class="address-name">
+								<strong th:text="${customerName}">서인석</strong>
+								<em>기본 배송지</em>
+							</p>
+							<p th:text="${phoneNumber}">010-1234-0108</p>
+							<p th:text="${address}">서울특별시 강남구 테헤란로 123, COMPICK 8층</p>
+						</div>
+					</div>
+					<label class="delivery-request">
+						<span>배송 요청사항</span>
+						<select>
+							<option>배송 전 연락 부탁드립니다.</option>
+							<option>문 앞에 놓아주세요.</option>
+							<option>경비실에 맡겨주세요.</option>
+							<option>직접 입력</option>
+						</select>
+					</label>
+				</section>
+
+				<section class="order-card" aria-labelledby="products-title">
+					<header class="card-heading">
+						<div><b>02</b><h2 id="products-title">주문 상품</h2></div>
+						<span th:text="|${#lists.size(items)}개 상품|">2개 상품</span>
+					</header>
+					<article class="order-item" th:each="item : ${items}">
+						<div class="product-thumb" th:classappend="${item.icon == 'TOOL'} ? 'tool' : ''">
+							<span th:text="${item.icon == 'PC'} ? 'PC' : '조립'">PC</span>
+						</div>
+						<div class="item-information">
+							<strong th:text="${item.name}">게이밍 PC 컴픽 에디션</strong>
+							<p th:text="${item.description}">AMD Ryzen 7 7800X3D · RTX 4070 SUPER</p>
+							<small th:text="|수량 ${item.quantity}개|">수량 1개</small>
+						</div>
+						<strong class="item-price" th:text="|${#numbers.formatInteger(item.price, 0, 'COMMA')}원|">1,589,000원</strong>
+					</article>
+				</section>
+			</div>
+
+			<aside class="payment-card">
+				<header class="payment-heading"><b>03</b><h2>최종 결제 금액</h2></header>
+				<dl class="price-breakdown">
+					<div><dt>상품 금액</dt><dd th:text="|${#numbers.formatInteger(productAmount, 0, 'COMMA')}원|">1,918,000원</dd></div>
+					<div><dt>배송비</dt><dd th:text="${shippingFee == 0 ? '무료' : #numbers.formatInteger(shippingFee, 0, 'COMMA') + '원'}">무료</dd></div>
+				</dl>
+				<p class="total-price">
+					<span>총 결제 금액</span>
+					<strong th:text="|${#numbers.formatInteger(totalAmount, 0, 'COMMA')}원|">1,918,000원</strong>
+				</p>
+
+				<fieldset class="payment-methods">
+					<legend>결제 수단</legend>
+					<label class="payment-method selected">
+						<input type="radio" name="paymentMethod" value="KAKAO_PAY" checked>
+						<i class="kakao">K</i>
+						<span><strong>카카오페이</strong><small>간편하고 안전하게 결제</small></span>
+						<b>✓</b>
+					</label>
+					<label class="payment-method">
+						<input type="radio" name="paymentMethod" value="CARD">
+						<i class="card">▰</i>
+						<span><strong>신용·체크카드</strong><small>모든 카드사 결제 가능</small></span>
+						<b>✓</b>
+					</label>
+				</fieldset>
+
+				<label class="payment-agreement">
+					<input id="payment-agreement" type="checkbox">
+					<span>주문 내용을 확인했으며 결제에 동의합니다.</span>
+				</label>
+				<button id="payment-button" class="payment-button" type="button" disabled
+					th:data-total-amount="${totalAmount}">
+					<strong th:text="|${#numbers.formatInteger(totalAmount, 0, 'COMMA')}원|">1,918,000원</strong>
+					결제하기
+				</button>
+				<p class="secure-payment">안전한 결제를 위해 개인정보가 암호화됩니다.</p>
+			</aside>
+		</div>
+	</main>
+
+	<div id="order-toast" class="order-toast" role="status" aria-live="polite"></div>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>
