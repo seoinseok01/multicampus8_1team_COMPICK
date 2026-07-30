@@ -3,7 +3,6 @@ package com.boot.compick.home.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
 import com.boot.compick.product.service.ProductService;
 
 @Controller

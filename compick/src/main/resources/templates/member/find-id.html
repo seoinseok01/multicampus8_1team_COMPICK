@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+            아이디 찾기 | COMPICK
+        </title>
+        <link rel="stylesheet" th:href="@{/css/main.css}">
+        <link rel="stylesheet" th:href="@{/css/member.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/header :: siteHeader}">
+        </div>
+        <main class="page">
+            <h1>
+                아이디 찾기
+            </h1>
+            <p class="subtitle">
+                가입할 때 사용한 이름과 이메일을 인증해 주세요.
+            </p>
+            <section class="card narrow">
+                <div class="notice success" th:if="${message}" th:text="${message}">
+                </div>
+                <div class="notice error" th:if="${error}" th:text="${error}">
+                </div>
+                <div th:if="${maskedLoginId}" class="result-box">
+                    <p>
+                        회원님의 아이디
+                    </p>
+                    <strong th:text="${maskedLoginId}">
+                    </strong>
+                    <a class="primary button" th:href="@{/login}">
+                        로그인하기
+                    </a>
+                </div>
+                <div th:unless="${maskedLoginId}">
+                    <form th:action="@{/members/find-id/send}" method="post">
+                        <label>
+                            이름
+                            <input name="name" required placeholder="이름 입력">
+                        </label>
+                        <label>
+                            이메일
+                            <input type="email" name="email" required placeholder="가입 이메일">
+                        </label>
+                        <button class="secondary full">
+                            인증번호 전송
+                        </button>
+                    </form>
+                    <hr>
+                    <form th:action="@{/members/find-id/confirm}" method="post">
+                        <label>
+                            인증번호
+                            <input name="code" inputmode="numeric" maxlength="6" required placeholder="6자리 인증번호">
+                        </label>
+                        <button class="primary">
+                            아이디 확인
+                        </button>
+                    </form>
+                </div>
+                <p class="links">
+                    <a th:href="@{/login}">
+                        로그인으로 돌아가기
+                    </a>
+                </p>
+            </section>
+        </main>
+        <div th:replace="~{fragments/footer :: siteFooter}"></div>
+    </body>
+</html>

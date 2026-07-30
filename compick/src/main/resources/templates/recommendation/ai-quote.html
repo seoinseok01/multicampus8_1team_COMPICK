@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 견적 | COMPICK</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/ai-recommendation.css}">
+    <script th:src="@{/js/ai-recommendation.js}" defer></script>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: siteHeader}"></div>
+
+    <main class="ai-page">
+        <section class="ai-view ai-input-view" th:unless="${recommendation}">
+            <header class="ai-page-header">
+                <p>AI QUOT</p>
+                <h1>AI 견적 맞추기</h1>
+                <p>예산과 원하는 사용 목적을 자연어로 입력하세요.</p>
+            </header>
+
+            <div class="ai-input-layout">
+                <section class="ai-guide-card">
+                    <span class="ai-badge">COMPICK AI</span>
+                    <h2>원하는 PC를 말로 설명해 보세요</h2>
+                    <p>예산과 사용 목적을 입력하면 실제 판매 상품을 기준으로 견적을 구성합니다.</p>
+
+                    <ol class="ai-guide-list">
+                        <li><strong>1</strong><div><b>예산 범위 확인</b><span>입력한 금액 안에서 부품별 예산을 배분합니다.</span></div></li>
+                        <li><strong>2</strong><div><b>실제 상품 연결</b><span>추천 부품을 COMPICK 상품 데이터와 연결합니다.</span></div></li>
+                        <li><strong>3</strong><div><b>호환성 검사</b><span>CPU·메인보드·RAM 등 주요 규격을 확인합니다.</span></div></li>
+                    </ol>
+                    <p class="ai-tip"><b>TIP</b> 예산·게임명·해상도·저장 공간을 함께 적으면 더 정확해요.</p>
+                </section>
+
+                <section class="ai-request-card">
+                    <h2>어떤 PC가 필요하신가요?</h2>
+                    <p>예산, 사용 목적, 원하는 성능이나 선호 부품을 자유롭게 작성하세요.</p>
+                    <form id="ai-quote-form" th:action="@{/ai-quotes}" th:object="${aiRecommendationRequest}" method="post">
+                        <label for="requirements" class="sr-only">PC 요구사항</label>
+                        <textarea id="requirements" th:field="*{requirements}" maxlength="1000"
+                            placeholder="예: 150만원 정도로 배틀그라운드를 QHD에서 원활하게 하고 싶어요.&#10;저장 공간은 1TB 이상이면 좋겠고 RGB는 없어도 됩니다."></textarea>
+                        <small class="field-error" th:errors="*{requirements}"></small>
+                        <div class="quick-condition">
+                            <b>빠른 조건</b>
+                            <div>
+                                <button type="button" data-condition="100만원 이하">100만원 이하</button>
+                                <button type="button" data-condition="게이밍">게이밍</button>
+                                <button type="button" data-condition="영상 편집">영상 편집</button>
+                                <button type="button" data-condition="저소음">저소음</button>
+                            </div>
+                        </div>
+                        <button class="ai-submit-button" type="submit">AI 견적 추천받기</button>
+                    </form>
+                </section>
+            </div>
+            <p class="ai-error" th:if="${recommendationError}" th:text="${recommendationError}"></p>
+        </section>
+
+        <section id="ai-loading-view" class="ai-view ai-loading-view is-hidden"
+            th:unless="${recommendation}" aria-live="polite">
+            <header class="ai-page-header">
+                <p>AI QUOT</p>
+                <h1>AI 견적을 만들고 있어요</h1>
+                <p>입력한 조건을 실제 상품과 연결하고 호환성을 확인합니다.</p>
+            </header>
+            <div class="ai-loading-layout">
+                <section class="loading-main-card">
+                    <span class="loading-spinner" aria-hidden="true"></span>
+                    <h2>AI가 최적의 부품 조합을 찾고 있습니다.</h2>
+                    <p>잠시만 기다려 주세요.</p>
+                    <ol class="loading-steps">
+                        <li class="done"><span>추천 요청</span><b>완료</b></li>
+                        <li class="active"><span>상품 연결</span><b>진행 중</b></li>
+                        <li><span>결과 구성</span><b>대기</b></li>
+                    </ol>
+                </section>
+                <section class="loading-summary-card">
+                    <b>입력한 요청</b>
+                    <p id="loading-request"></p>
+                    <h2>추천 결과를 준비하고 있습니다</h2>
+                    <span>상품 연결과 호환성 검사가 끝나면 추천 구성이 표시됩니다.</span>
+                    <div class="loading-skeleton"><i></i><i></i><i></i><i></i><i></i></div>
+                </section>
+            </div>
+        </section>
+
+        <section class="ai-view ai-result-view" th:if="${recommendation}">
+            <header class="ai-page-header">
+                <p>AI QUOT</p>
+                <h1>AI 추천 견적 결과</h1>
+                <p>입력한 조건을 기준으로 구성한 추천 부품과 총금액입니다.</p>
+            </header>
+
+            <h2 class="result-section-title">추천 구성</h2>
+            <div class="ai-result-layout">
+                <section class="quote-item-list">
+                    <article class="quote-item" th:each="item : ${quoteItems}">
+                        <b th:text="${item.categoryLabel()}">CPU</b>
+                        <span th:text="${item.name()}">상품명</span>
+                        <strong th:text="${#numbers.formatInteger(item.price(), 0, 'COMMA') + '원'}">0원</strong>
+                    </article>
+                </section>
+
+                <section class="result-summary-card">
+                    <b class="request-label">입력한 요청</b>
+                    <p class="original-request" th:text="${originalRequirements}"></p>
+                    <h2>AI 추천 설명</h2>
+                    <p class="result-explanation" th:text="${recommendation.explanation()}"></p>
+                    <ul class="keyword-list" th:if="${recommendation.keywords() != null}">
+                        <li th:each="keyword : ${recommendation.keywords()}" th:text="${keyword}"></li>
+                    </ul>
+                    <p class="compatibility-message">✓ 호환성 검사 통과</p>
+                    <p class="result-warning" th:if="${recommendation.warning()}" th:text="${recommendation.warning()}"></p>
+                    <div class="total-price"><b>총금액</b><strong th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA') + '원'}">0원</strong></div>
+                    <button type="button" class="integration-button secondary">견적 쇼핑에서 수정</button>
+                    <button type="button" class="integration-button primary">장바구니 담기</button>
+                    <p class="integration-notice" hidden>정식 견적·장바구니 기능이 준비되면 연결됩니다.</p>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

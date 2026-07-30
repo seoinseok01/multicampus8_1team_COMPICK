@@ -30,7 +30,7 @@
 					<a th:href="@{/mypage}">마이페이지</a>
 				</li>
 				<li sec:authorize="isAnonymous()">
-					<a th:href="@{/members/login}">로그인</a>
+					<a th:href="@{/login}">로그인</a>
 				</li>
 				<li sec:authorize="isAuthenticated()">
 					<form th:action="@{/logout}" method="post">
@@ -40,5 +40,16 @@
 			</ul>
 		</nav>
 	</header>
+
+	<aside th:fragment="mypage-menu(active)" class="side-menu">
+		<h2>마이페이지</h2>
+		<a th:classappend="${active == 'profile'} ? 'active'" th:href="@{/mypage}">
+			회원정보
+		</a>
+		<a th:classappend="${active == 'address'} ? 'active'" th:href="@{/mypage/addresses}">
+			배송지 관리
+		</a>
+		<a th:href="@{/orders}">주문 내역</a>
+	</aside>
 </body>
 </html>
