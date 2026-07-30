@@ -110,7 +110,11 @@ document.addEventListener("DOMContentLoaded", () => {
 			});
 
 			if (response.status === 401 || response.redirected) {
+<<<<<<< HEAD
 				window.location.assign("/members/login");
+=======
+				window.location.assign("/login");
+>>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 				return;
 			}
 

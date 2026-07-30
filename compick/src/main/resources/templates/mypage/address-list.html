@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>배송지 관리 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<link rel="stylesheet" th:href="@{/css/member.css}">
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script th:src="@{/js/address.js}" defer></script>
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="address-page">
+		<div class="page-heading">
+			<div>
+				<h1>배송지 관리</h1>
+				<p>주문에 사용할 배송지를 등록하고 관리하세요.</p>
+			</div>
+			<a th:href="@{/mypage}">마이페이지로</a>
+		</div>
+
+		<section aria-labelledby="address-list-title">
+			<h2 id="address-list-title">등록된 배송지</h2>
+			<p class="empty-message" th:if="${#lists.isEmpty(addresses)}">
+				등록된 배송지가 없습니다.
+			</p>
+			<ul class="address-list" th:unless="${#lists.isEmpty(addresses)}">
+				<li th:each="address : ${addresses}"
+					th:data-address-id="${address.addressId()}"
+					th:data-address-name="${address.addressName()}"
+					th:data-recipient-name="${address.recipientName()}"
+					th:data-phone="${address.phone()}"
+					th:data-zip-code="${address.zipCode()}"
+					th:data-address1="${address.address1()}"
+					th:data-address2="${address.address2()}"
+					th:data-default="${address.isDefault()}">
+					<h3>
+						<span th:text="${address.addressName()}">배송지</span>
+						<small th:if="${address.isDefault()}">기본 배송지</small>
+					</h3>
+					<p th:text="|${address.recipientName()} · ${address.phone()}|"></p>
+					<p th:text="|[${address.zipCode()}] ${address.address1()} ${address.address2() ?: ''}|"></p>
+					<div class="address-actions">
+						<button type="button" data-address-edit>수정</button>
+						<button type="button" data-address-delete>삭제</button>
+						<button th:unless="${address.isDefault()}" type="button"
+							data-address-default>기본 배송지 설정</button>
+					</div>
+				</li>
+			</ul>
+		</section>
+
+		<section class="member-card wide" aria-labelledby="address-form-title">
+			<h2 id="address-form-title">배송지 등록</h2>
+			<form id="address-form" class="member-form">
+				<input id="addressId" type="hidden">
+				<label for="addressName">배송지 이름</label>
+				<input id="addressName" maxlength="50" placeholder="예: 우리 집">
+				<label for="recipientName">받는 사람</label>
+				<input id="recipientName" maxlength="50" required>
+				<label for="addressPhone">휴대전화 번호</label>
+				<input id="addressPhone" type="tel" required>
+				<label for="zipCode">우편번호</label>
+				<input id="zipCode" inputmode="numeric" maxlength="5" required>
+				<label for="address1">기본 주소</label>
+				<input id="address1" maxlength="255" required>
+				<label for="address2">상세 주소</label>
+				<input id="address2" maxlength="255">
+				<label class="check-label">
+					<input id="isDefault" type="checkbox">
+					기본 배송지로 설정
+				</label>
+				<p class="form-message" id="address-message" role="status"></p>
+				<div class="form-actions">
+					<button class="secondary-button" type="reset">초기화</button>
+					<button class="primary-button" type="submit">저장</button>
+				</div>
+			</form>
+		</section>
+	</main>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

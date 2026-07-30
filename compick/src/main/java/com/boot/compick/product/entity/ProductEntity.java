@@ -41,7 +41,11 @@ public class ProductEntity {
 	@Column(name = "rating_count", nullable = false)
 	private int ratingCount;
 
+<<<<<<< HEAD
 	@Column(name = "stock_quantity", nullable = false, columnDefinition = "NUMBER(10) DEFAULT 0")
+=======
+	@Column(name = "stock_quantity", nullable = false)
+>>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 	private int stockQuantity;
 
 	@Lob
@@ -51,7 +55,11 @@ public class ProductEntity {
 	@Column(name = "image_url", length = 1000)
 	private String imageUrl;
 
+<<<<<<< HEAD
 	@Column(name = "sales_status", nullable = false, length = 20, columnDefinition = "VARCHAR2(20 CHAR) DEFAULT 'ON_SALE'")
+=======
+	@Column(name = "sales_status", nullable = false, length = 20)
+>>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 	private String salesStatus;
 
 	@Column(name = "socket_type", length = 50)
@@ -73,7 +81,11 @@ public class ProductEntity {
 	@Column(name = "spec_json")
 	private String specJson;
 
+<<<<<<< HEAD
 	@Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT SYSTIMESTAMP")
+=======
+	@Column(name = "created_at", nullable = false)
+>>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 	private LocalDateTime createdAt;
 
 	protected ProductEntity() {
