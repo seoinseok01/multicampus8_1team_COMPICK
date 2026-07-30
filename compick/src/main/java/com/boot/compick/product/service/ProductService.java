@@ -31,11 +31,7 @@ public class ProductService {
 
 	public List<PopularProductResponse> findPopularProducts() {
 		return productRepository
-<<<<<<< HEAD
 			.findTop4BySalesStatusAndStockQuantityGreaterThanOrderByRatingCountDesc(
-=======
-			.findTop4BySalesStatusAndStockQuantityGreaterThanOrderByRatingCountDescCreatedAtDesc(
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 				ON_SALE,
 				0
 			)

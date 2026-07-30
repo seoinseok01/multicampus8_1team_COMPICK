@@ -14,10 +14,7 @@ CREATE TABLE MEMBER (
     password_hash   VARCHAR2(255) NOT NULL,
     member_name     VARCHAR2(50)  NOT NULL,
     email           VARCHAR2(100) NOT NULL,
-<<<<<<< HEAD
-=======
     nickname        VARCHAR2(20)  NOT NULL,
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
     phone           VARCHAR2(20)  NOT NULL,
     member_role     VARCHAR2(20)  DEFAULT 'USER' NOT NULL,
     member_status   VARCHAR2(20)  DEFAULT 'ACTIVE' NOT NULL,
@@ -59,8 +56,6 @@ CREATE TABLE ADDRESS (
 );
 
 -- ============================================================
-<<<<<<< HEAD
-=======
 -- 2-1. 소셜 계정
 -- MEMBER 1 : N SOCIAL_ACCOUNT
 -- ============================================================
@@ -87,7 +82,6 @@ CREATE TABLE SOCIAL_ACCOUNT (
 );
 
 -- ============================================================
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 -- 3. 카테고리
 -- CATEGORY 1 : N PRODUCT
 -- ============================================================

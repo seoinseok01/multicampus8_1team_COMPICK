@@ -1,22 +1,5 @@
 package com.boot.compick.config;
 
-<<<<<<< HEAD
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
-
-@Configuration
-public class SecurityConfig {
-
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		LoginUrlAuthenticationEntryPoint loginEntryPoint =
-			new LoginUrlAuthenticationEntryPoint("/members/login");
-=======
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,8 +19,7 @@ public class SecurityConfig {
 
 	private final MemberUserDetailsService memberUserDetailsService;
 	private final CompickOidcUserService compickOidcUserService;
-	private final ObjectProvider<ClientRegistrationRepository>
-		clientRegistrations;
+	private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
 
 	public SecurityConfig(
 		MemberUserDetailsService memberUserDetailsService,
@@ -60,7 +42,6 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		LoginUrlAuthenticationEntryPoint loginEntryPoint =
 			new LoginUrlAuthenticationEntryPoint("/login");
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 
 		http
 			.authorizeHttpRequests(authorize -> authorize
@@ -71,8 +52,6 @@ public class SecurityConfig {
 					"/recommendations/**",
 					"/ai-quotes/**",
 					"/members/signup",
-<<<<<<< HEAD
-=======
 					"/api/members/check-login-id",
 					"/api/members/check-email",
 					"/login",
@@ -81,7 +60,6 @@ public class SecurityConfig {
 					"/css/**",
 					"/js/**",
 					"/images/**",
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 					"/error",
 					"/error/**"
 				).permitAll()
@@ -89,10 +67,7 @@ public class SecurityConfig {
 				.requestMatchers(
 					"/cart/**",
 					"/mypage/**",
-<<<<<<< HEAD
-=======
 					"/members/social-password",
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 					"/orders/**",
 					"/api/cart/**",
 					"/api/orders/**",
@@ -100,18 +75,6 @@ public class SecurityConfig {
 				).authenticated()
 				.anyRequest().permitAll()
 			)
-<<<<<<< HEAD
-			.formLogin(form -> form
-				.loginPage("/members/login")
-				.loginProcessingUrl("/members/login")
-				.usernameParameter("loginId")
-				.passwordParameter("password")
-				.defaultSuccessUrl("/", true)
-				.failureUrl("/members/login?error")
-				.permitAll()
-			)
-			.logout(logout -> logout.logoutSuccessUrl("/"))
-=======
 			.userDetailsService(memberUserDetailsService)
 			.formLogin(form -> form
 				.loginPage("/login")
@@ -132,7 +95,6 @@ public class SecurityConfig {
 				.invalidateHttpSession(true)
 				.deleteCookies("JSESSIONID", "remember-me")
 			)
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 			.exceptionHandling(exception -> exception
 				.authenticationEntryPoint((request, response, authException) -> {
 					if (request.getRequestURI().startsWith("/api/")) {
@@ -143,15 +105,6 @@ public class SecurityConfig {
 				})
 			);
 
-<<<<<<< HEAD
-		return http.build();
-	}
-
-	@Bean
-	PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
-=======
 		if (clientRegistrations.getIfAvailable() != null) {
 			http.oauth2Login(oauth -> oauth
 				.loginPage("/login")
@@ -172,6 +125,4 @@ public class SecurityConfig {
 
 		return http.build();
 	}
-
->>>>>>> 48ad55d3c2f8342386c89a8e9f5dff696b5a09ad
 }
