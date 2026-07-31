@@ -9,9 +9,9 @@ import com.boot.compick.member.entity.VerificationPurpose;
 import com.boot.compick.member.repository.EmailVerificationRepository;
 import com.boot.compick.member.repository.SocialAccountRepository;
 import com.boot.compick.member.service.AddressService;
-import com.boot.compick.member.service.EmailVerificationService;
 import com.boot.compick.member.service.MemberService;
 import com.boot.compick.member.service.SocialAccountService;
+import com.boot.compick.member.service.EmailVerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,11 +37,11 @@ class MemberServiceIntegrationTests {
     @Autowired MemberService memberService;
     @Autowired AddressService addressService;
     @Autowired MockMvc mockMvc;
-    @Autowired EmailVerificationRepository emailVerificationRepository;
-    @Autowired EmailVerificationService emailVerificationService;
     @Autowired PasswordEncoder passwordEncoder;
     @Autowired SocialAccountService socialAccountService;
     @Autowired SocialAccountRepository socialAccountRepository;
+    @Autowired EmailVerificationRepository emailVerificationRepository;
+    @Autowired EmailVerificationService emailVerificationService;
 
     @Test
     void joinProfilePasswordAndWithdrawalFlow() {
@@ -91,8 +91,6 @@ class MemberServiceIntegrationTests {
     void memberPagesRenderSuccessfully() throws Exception {
         mockMvc.perform(get("/login")).andExpect(status().isOk()).andExpect(view().name("member/login"));
         mockMvc.perform(get("/members/signup")).andExpect(status().isOk()).andExpect(view().name("member/join"));
-        mockMvc.perform(get("/members/find-id")).andExpect(status().isOk()).andExpect(view().name("member/find-id"));
-        mockMvc.perform(get("/members/password-reset")).andExpect(status().isOk()).andExpect(view().name("member/password-reset"));
         mockMvc.perform(get("/privacy-policy")).andExpect(status().isOk()).andExpect(view().name("privacy-policy"));
         memberService.join(joinForm("screen01", "screen@compick.com"));
         mockMvc.perform(get("/mypage").with(user("screen01").roles("USER")))
@@ -103,6 +101,7 @@ class MemberServiceIntegrationTests {
 
     @Test
     void successfulJoinSignsInAndRedirectsToHome() throws Exception {
+        verifiedSignupEmail("autologin@compick.com", "654321");
         mockMvc.perform(post("/members/signup").with(csrf())
                         .param("loginId", "autologin01")
                         .param("password", "Abc!1234")
@@ -119,13 +118,17 @@ class MemberServiceIntegrationTests {
     }
 
     @Test
-    void verificationCodeIsSingleUseAndPurposeSpecific() {
-        verifiedEmail("verify@compick.com", VerificationPurpose.FIND_ID, "654321");
-        emailVerificationService.consumeVerified("verify@compick.com", VerificationPurpose.FIND_ID);
-        assertThatThrownBy(() -> emailVerificationService.consumeVerified("verify@compick.com", VerificationPurpose.FIND_ID))
-                .hasMessageContaining("사용");
-        assertThatThrownBy(() -> emailVerificationService.confirm("verify@compick.com", VerificationPurpose.PASSWORD_RESET, "654321"))
-                .hasMessageContaining("요청");
+    void findIdReturnsTheFullLoginIdForPhoneAndEmail() {
+        memberService.join(joinForm("finduser01", "find@compick.com"));
+        assertThat(memberService.findLoginId("01011112222", "find@compick.com"))
+                .isEqualTo("finduser01");
+    }
+
+    private void verifiedSignupEmail(String email, String code) {
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        emailVerificationRepository.save(new EmailVerification(email, VerificationPurpose.SIGN_UP,
+                passwordEncoder.encode(code), now.plusMinutes(5), now));
+        emailVerificationService.confirm(email, VerificationPurpose.SIGN_UP, code);
     }
 
     @Test
@@ -179,9 +182,4 @@ class MemberServiceIntegrationTests {
         return form;
     }
 
-    private void verifiedEmail(String email, VerificationPurpose purpose, String code) {
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        emailVerificationRepository.save(new EmailVerification(email, purpose, passwordEncoder.encode(code), now.plusMinutes(5), now));
-        emailVerificationService.confirm(email, purpose, code);
-    }
 }

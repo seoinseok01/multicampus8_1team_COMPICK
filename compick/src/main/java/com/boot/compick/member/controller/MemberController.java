@@ -2,15 +2,16 @@ package com.boot.compick.member.controller;
 
 import com.boot.compick.member.dto.*;
 import com.boot.compick.member.entity.Member;
+import com.boot.compick.member.entity.VerificationPurpose;
 import com.boot.compick.member.service.AddressService;
 import com.boot.compick.member.service.MemberService;
 import com.boot.compick.member.service.SocialAccountService;
+import com.boot.compick.member.service.EmailVerificationService;
 import com.boot.compick.member.security.CompickOidcUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +33,7 @@ public class MemberController {
     private final MemberService memberService;
     private final AddressService addressService;
     private final SocialAccountService socialAccountService;
+    private final EmailVerificationService emailVerificationService;
     private final AuthenticationManager authenticationManager;
     private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
@@ -59,7 +61,9 @@ public class MemberController {
             return "member/join";
         }
         try {
+            emailVerificationService.requireVerified(joinForm.getEmail(), VerificationPurpose.SIGN_UP);
             memberService.join(joinForm);
+            emailVerificationService.consumeVerified(joinForm.getEmail(), VerificationPurpose.SIGN_UP);
         } catch (IllegalArgumentException e) {
             bindingResult.reject("join", e.getMessage());
             return "member/join";
@@ -68,18 +72,6 @@ public class MemberController {
         signIn(joinForm.getLoginId(), joinForm.getPassword(), request, response);
         redirectAttributes.addFlashAttribute("message", "회원가입이 완료되었습니다.");
         return "redirect:/";
-    }
-
-    @GetMapping("/api/members/check-login-id")
-    @ResponseBody
-    public ResponseEntity<Boolean> checkLoginId(@RequestParam String loginId) {
-        return ResponseEntity.ok(memberService.isLoginIdAvailable(loginId));
-    }
-
-    @GetMapping("/api/members/check-email")
-    @ResponseBody
-    public ResponseEntity<Boolean> checkEmail(@RequestParam String email) {
-        return ResponseEntity.ok(memberService.isEmailAvailable(email));
     }
 
     @GetMapping("/members/social-password")

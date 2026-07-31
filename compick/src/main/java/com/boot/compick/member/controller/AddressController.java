@@ -1,14 +1,11 @@
 package com.boot.compick.member.controller;
 
 import com.boot.compick.member.dto.AddressForm;
-import com.boot.compick.member.dto.AddressResponse;
 import com.boot.compick.member.service.AddressService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -59,31 +56,4 @@ public class AddressController {
         return "redirect:/mypage/addresses";
     }
 
-    @PostMapping("/api/addresses")
-    @ResponseBody
-    public ResponseEntity<AddressResponse> createApi(Authentication authentication,
-                                                     @Valid @RequestBody AddressForm addressForm) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(AddressResponse.from(addressService.save(authentication.getName(), null, addressForm)));
-    }
-
-    @PutMapping("/api/addresses/{addressId}")
-    @ResponseBody
-    public AddressResponse updateApi(Authentication authentication, @PathVariable Long addressId,
-                                     @Valid @RequestBody AddressForm addressForm) {
-        return AddressResponse.from(addressService.save(authentication.getName(), addressId, addressForm));
-    }
-
-    @DeleteMapping("/api/addresses/{addressId}")
-    @ResponseBody
-    public ResponseEntity<Void> deleteApi(Authentication authentication, @PathVariable Long addressId) {
-        addressService.delete(authentication.getName(), addressId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/api/addresses/{addressId}/default")
-    @ResponseBody
-    public AddressResponse setDefaultApi(Authentication authentication, @PathVariable Long addressId) {
-        return AddressResponse.from(addressService.setDefault(authentication.getName(), addressId));
-    }
 }

@@ -45,8 +45,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/products/**", "/quotes/**", "/recommendations/**",
                                 "/ai-quotes/**", "/privacy-policy", "/login", "/members/signup",
                                 "/api/members/check-login-id", "/api/members/check-email",
-                                "/oauth2/**", "/login/oauth2/**", "/members/find-id/**",
-                                "/members/password-reset/**", "/css/**", "/js/**", "/images/**",
+                                "/api/email-verifications/**", "/members/find-id/**", "/members/password-reset/**",
+                                "/oauth2/**", "/login/oauth2/**", "/css/**", "/js/**", "/images/**",
                                 "/error", "/error/**").permitAll()
                         .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/cart/**", "/mypage/**", "/orders/**",
