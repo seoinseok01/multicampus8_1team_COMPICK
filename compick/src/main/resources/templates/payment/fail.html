@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>결제 실패 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<link rel="stylesheet" th:href="@{/css/payment-result.css}">
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="payment-result">
+		<section>
+			<div class="result-icon fail">!</div>
+			<p class="result-label">PAYMENT FAILED</p>
+			<h1>결제를 완료하지 못했습니다</h1>
+			<p th:text="${message}">결제가 완료되지 않았습니다.</p>
+			<dl>
+				<div><dt>오류 코드</dt><dd th:text="${code}">PAYMENT_FAILED</dd></div>
+				<div th:if="${orderId}"><dt>주문번호</dt><dd th:text="${orderId}">COMPICK-ORDER</dd></div>
+			</dl>
+			<div class="result-actions">
+				<a th:href="@{/cart}">장바구니로</a>
+				<a class="primary" th:href="@{/orders/new}">다시 결제하기</a>
+			</div>
+		</section>
+	</main>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

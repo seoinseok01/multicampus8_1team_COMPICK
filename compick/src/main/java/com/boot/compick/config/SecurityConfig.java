@@ -68,7 +68,9 @@ public class SecurityConfig {
 					"/cart/**",
 					"/mypage/**",
 					"/members/social-password",
+					"/order",
 					"/orders/**",
+					"/payments/**",
 					"/api/cart/**",
 					"/api/orders/**",
 					"/api/addresses/**"

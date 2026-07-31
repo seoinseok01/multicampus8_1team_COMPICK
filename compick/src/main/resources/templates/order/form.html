@@ -8,9 +8,16 @@
 	<link rel="stylesheet" th:href="@{/css/order.css}">
 	<meta name="_csrf" th:content="${_csrf.token}">
 	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script src="https://js.tosspayments.com/v2/standard"></script>
 	<script th:src="@{/js/order.js}" defer></script>
 </head>
-<body>
+<body
+	th:data-toss-client-key="${tossClientKey}"
+	th:data-customer-key="${customerKey}"
+	th:data-order-id="${orderId}"
+	th:data-order-name="${orderName}"
+	th:data-customer-name="${customerName}"
+	th:data-total-amount="${totalAmount}">
 	<div th:replace="~{fragments/header :: siteHeader}"></div>
 
 	<main class="order-page">
@@ -31,10 +38,10 @@
 						<i aria-hidden="true">✓</i>
 						<div>
 							<p class="address-name">
-								<strong th:text="${customerName}">서인석</strong>
+								<strong th:text="${customerName}">홍길동</strong>
 								<em>기본 배송지</em>
 							</p>
-							<p th:text="${phoneNumber}">010-1234-0108</p>
+							<p th:text="${phoneNumber}">010-1234-5678</p>
 							<p th:text="${address}">서울특별시 강남구 테헤란로 123, COMPICK 8층</p>
 						</div>
 					</div>
@@ -79,28 +86,22 @@
 					<strong th:text="|${#numbers.formatInteger(totalAmount, 0, 'COMMA')}원|">1,918,000원</strong>
 				</p>
 
-				<fieldset class="payment-methods">
-					<legend>결제 수단</legend>
-					<label class="payment-method selected">
-						<input type="radio" name="paymentMethod" value="KAKAO_PAY" checked>
-						<i class="kakao">K</i>
-						<span><strong>카카오페이</strong><small>간편하고 안전하게 결제</small></span>
-						<b>✓</b>
-					</label>
-					<label class="payment-method">
-						<input type="radio" name="paymentMethod" value="CARD">
-						<i class="card">▰</i>
-						<span><strong>신용·체크카드</strong><small>모든 카드사 결제 가능</small></span>
-						<b>✓</b>
-					</label>
-				</fieldset>
-
-				<label class="payment-agreement">
-					<input id="payment-agreement" type="checkbox">
-					<span>주문 내용을 확인했으며 결제에 동의합니다.</span>
-				</label>
+				<div class="payment-window-info">
+					<h3>결제 수단</h3>
+					<div class="payment-window-method">
+						<i aria-hidden="true">▰</i>
+						<div>
+							<strong>카드 · 간편결제</strong>
+							<p>결제하기를 누르면 토스 통합 결제창에서 결제수단을 선택할 수 있습니다.</p>
+						</div>
+						<b aria-hidden="true">✓</b>
+					</div>
+				</div>
+				<p class="payment-configuration-error" th:unless="${tossConfigured}">
+					토스페이먼츠 API 개별 연동 테스트 키를 환경변수에 등록한 뒤 서버를 다시 시작해 주세요.
+				</p>
 				<button id="payment-button" class="payment-button" type="button" disabled
-					th:data-total-amount="${totalAmount}">
+					th:aria-disabled="${!tossConfigured}">
 					<strong th:text="|${#numbers.formatInteger(totalAmount, 0, 'COMMA')}원|">1,918,000원</strong>
 					결제하기
 				</button>

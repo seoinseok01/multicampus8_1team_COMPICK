@@ -1,10 +1,8 @@
-package com.boot.compick.order.controller;
+package com.boot.compick.cart.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
@@ -16,25 +14,18 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class OrderControllerTests {
+class CartPageControllerTests {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Test
-	void authenticatedUserCanViewOrderForm() throws Exception {
-		mockMvc.perform(get("/orders/new").with(user("customer")))
+	void authenticatedUserCanViewEmptyCart() throws Exception {
+		mockMvc.perform(get("/cart").with(user("cart-user")))
 			.andExpect(status().isOk())
-			.andExpect(view().name("order/form"))
-			.andExpect(model().attribute("totalAmount", 1_918_000))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("주문서 작성")))
-			.andExpect(content().string(org.hamcrest.Matchers.containsString("카드 · 간편결제")));
-	}
-
-	@Test
-	void anonymousUserIsRedirectedToLogin() throws Exception {
-		mockMvc.perform(get("/orders/new"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(redirectedUrlPattern("**/login"));
+			.andExpect(view().name("cart/index"))
+			.andExpect(content().string(
+				org.hamcrest.Matchers.containsString("장바구니가 비어 있습니다")
+			));
 	}
 }
