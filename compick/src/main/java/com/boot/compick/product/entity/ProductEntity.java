@@ -69,6 +69,15 @@ public class ProductEntity {
 	@Column(name = "recommended_power")
 	private Integer recommendedPower;
 
+	@Column(name = "gpu_length_mm")
+	private Integer gpuLengthMm;
+
+	@Column(name = "max_gpu_length_mm")
+	private Integer maxGpuLengthMm;
+
+	@Column(name = "power_capacity_watt")
+	private Integer powerCapacityWatt;
+
 	@Lob
 	@Column(name = "spec_json")
 	private String specJson;
@@ -141,6 +150,18 @@ public class ProductEntity {
 
 	public Integer getRecommendedPower() {
 		return recommendedPower;
+	}
+
+	public Integer getGpuLengthMm() {
+		return gpuLengthMm;
+	}
+
+	public Integer getMaxGpuLengthMm() {
+		return maxGpuLengthMm;
+	}
+
+	public Integer getPowerCapacityWatt() {
+		return powerCapacityWatt;
 	}
 
 	public String getSpecJson() {

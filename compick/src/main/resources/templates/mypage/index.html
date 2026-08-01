@@ -45,5 +45,8 @@
 		</section>
 	</main>
 	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+	<script th:if="${phoneMissing}">
+		window.alert("전화번호를 입력해주세요!");
+	</script>
 </body>
 </html>

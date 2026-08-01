@@ -183,6 +183,7 @@ public class MemberPageController {
 		String loginId = authentication.getName();
 		model.addAttribute("member", memberService.getSummary(loginId));
 		model.addAttribute("addresses", addressService.findAll(loginId));
+		model.addAttribute("phoneMissing", memberService.isPhoneMissing(loginId));
 		return "mypage/index";
 	}
 

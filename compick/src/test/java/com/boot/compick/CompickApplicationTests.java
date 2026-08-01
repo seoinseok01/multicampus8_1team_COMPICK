@@ -129,7 +129,7 @@ class CompickApplicationTests {
 				org.hamcrest.Matchers.containsString("href=\"/quotes/new\"")
 			))
 			.andExpect(content().string(
-				org.hamcrest.Matchers.containsString("href=\"/recommendations\"")
+				org.hamcrest.Matchers.containsString("href=\"/preset\"")
 			))
 			.andExpect(content().string(
 				org.hamcrest.Matchers.containsString("href=\"/ai-quotes\"")

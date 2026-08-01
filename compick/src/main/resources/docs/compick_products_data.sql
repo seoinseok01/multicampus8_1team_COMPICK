@@ -8,12 +8,12 @@
 
 -- 기존 PRODUCT 테이블을 사용하는 경우 최초 한 번만 실행한다.
 -- 이미 rating_count가 있다면 아래 두 ALTER TABLE 문은 제외하고 실행한다.
-ALTER TABLE PRODUCT
+/*ALTER TABLE PRODUCT
     ADD (rating_count NUMBER(10) DEFAULT 0 NOT NULL);
 
 ALTER TABLE PRODUCT
     ADD CONSTRAINT ck_product_rating_count
-    CHECK (rating_count >= 0);
+    CHECK (rating_count >= 0); */
 
 -- 카테고리: 이미 존재하면 건너뛴다.
 MERGE INTO CATEGORY target

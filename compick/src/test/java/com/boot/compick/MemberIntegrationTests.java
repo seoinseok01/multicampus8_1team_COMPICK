@@ -1,6 +1,7 @@
 package com.boot.compick;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -198,7 +199,7 @@ class MemberIntegrationTests {
 	}
 
 	@Test
-	void homeAlertsMemberWhosePhoneIsMissing() throws Exception {
+	void mypageAlertsMemberWhosePhoneIsMissing() throws Exception {
 		Member member = memberRepository.save(new Member(
 			"phoneMissing",
 			passwordEncoder.encode("Password!1"),
@@ -211,8 +212,15 @@ class MemberIntegrationTests {
 		mockMvc.perform(get("/")
 				.with(user(member.getLoginId()).roles("USER")))
 			.andExpect(status().isOk())
+			.andExpect(content().string(not(containsString(
+				"전화번호를 입력해주세요!"
+			))));
+
+		mockMvc.perform(get("/mypage")
+				.with(user(member.getLoginId()).roles("USER")))
+			.andExpect(status().isOk())
 			.andExpect(content().string(containsString(
-				"전화번호가 등록되지 않았습니다."
+				"전화번호를 입력해주세요!"
 			)));
 	}
 

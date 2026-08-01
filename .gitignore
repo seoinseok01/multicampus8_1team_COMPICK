@@ -2,6 +2,9 @@
 .AppleDouble
 .LSOverride
 .env
+CLAUDE.md
+.png
+.xlxs
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
@@ -36,3 +39,4 @@ build/
 
 ### VS Code ###
 .vscode/
+/.metadata/

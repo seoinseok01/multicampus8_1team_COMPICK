@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>부품 쇼핑 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script th:src="@{/js/products.js}" defer></script>
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="catalog-page">
+		<section class="page-heading">
+			<p>PARTS SHOP</p>
+			<h1>부품 쇼핑</h1>
+			<span>카테고리와 조건을 골라 원하는 부품을 빠르게 찾으세요.</span>
+		</section>
+
+		<nav class="category-tabs" aria-label="부품 카테고리">
+			<button
+				type="button"
+				th:each="tab : ${categoryTabs}"
+				th:text="${tab.label}"
+				th:data-category="${tab.name}"
+				th:classappend="${tab.name == 'CPU'} ? 'is-active'">
+				CPU
+			</button>
+		</nav>
+
+		<div class="catalog-layout">
+			<aside class="filter-panel" aria-label="상품 필터">
+				<h2>검색 및 필터</h2>
+
+				<label>제조사</label>
+				<div class="brand-checkbox-list" data-brand-list></div>
+
+				<label>가격 범위</label>
+				<div class="price-slider" data-price-slider>
+					<div class="price-slider-values">
+						<span data-min-price-label>0원</span>
+						<span>~</span>
+						<span data-max-price-label>0원</span>
+					</div>
+					<div class="price-slider-track">
+						<div class="price-slider-range" data-price-slider-range></div>
+						<input type="range" data-min-price-range aria-label="최소 가격">
+						<input type="range" data-max-price-range aria-label="최대 가격">
+					</div>
+				</div>
+
+				<label>주요 사양</label>
+				<div class="spec-filter-list" data-spec-list></div>
+
+				<button type="button" data-apply-filter>필터 적용</button>
+				<button type="button" class="filter-reset-button" data-reset-filter>초기화</button>
+			</aside>
+
+			<section class="catalog-content" aria-labelledby="product-list-title">
+				<div class="section-toolbar">
+					<div>
+						<h2 id="product-list-title">
+							<span data-category-label>CPU</span>
+							<span data-product-count></span>
+						</h2>
+					</div>
+					<div class="sort-button-group" role="group" aria-label="정렬">
+						<button type="button" class="is-active" data-sort="popular">인기순</button>
+						<button type="button" data-sort="priceAsc">낮은 가격순</button>
+						<button type="button" data-sort="priceDesc">높은 가격순</button>
+					</div>
+				</div>
+
+				<div class="storage-type-toggle" data-storage-type-toggle hidden role="group" aria-label="저장장치 유형">
+					<button type="button" class="is-active" data-storage-type="">전체</button>
+					<button type="button" data-storage-type="SSD">SSD</button>
+					<button type="button" data-storage-type="HDD">HDD</button>
+				</div>
+
+				<ul
+					class="product-grid"
+					data-product-grid
+					th:data-initial-category="CPU"
+					th:data-initial-page="${initialProducts.number}"
+					th:data-initial-has-next="${initialProducts.hasNext()}">
+					<li class="product-grid-item" th:each="product : ${initialProducts.content}">
+						<img
+							class="product-image"
+							th:src="${product.imageUrl != null and !#strings.isEmpty(product.imageUrl)}
+								? ${product.imageUrl}
+								: '/images/products/product-placeholder.svg'"
+							th:alt="|${product.name} 상품 이미지|"
+							th:data-fallback-src="@{/images/products/product-placeholder.svg}"
+							loading="lazy"
+							decoding="async"
+							referrerpolicy="no-referrer"
+							width="212"
+							height="132">
+						<p th:text="${product.brand}">브랜드</p>
+						<h3 th:text="${product.name}">상품명</h3>
+						<strong th:text="|${#numbers.formatInteger(product.price, 0, 'COMMA')}원|">0원</strong>
+						<button
+							type="button"
+							class="add-cart-button"
+							th:data-product-id="${product.productId}"
+							th:disabled="${product.stockQuantity <= 0}">
+							담기
+						</button>
+					</li>
+				</ul>
+
+				<p class="empty-products" data-empty-message hidden>조건에 맞는 상품이 없습니다.</p>
+				<div class="scroll-sentinel" data-scroll-sentinel></div>
+				<p class="loading-indicator" data-loading-indicator hidden>불러오는 중...</p>
+			</section>
+		</div>
+	</main>
+	<p id="cart-feedback" class="cart-feedback" role="status" aria-live="polite" hidden></p>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

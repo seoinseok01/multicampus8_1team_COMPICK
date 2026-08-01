@@ -50,7 +50,7 @@ public class SecurityConfig {
 					"/",
 					"/products/**",
 					"/quotes/**",
-					"/recommendations/**",
+					"/preset/**",
 					"/ai-quotes/**",
 					"/members/signup",
 					"/api/members/check-login-id",

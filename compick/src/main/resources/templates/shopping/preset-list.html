@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>추천 견적 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="recommendation-page">
+		<section class="page-heading">
+			<p>PRESET QUOT</p>
+			<h1>추천 견적</h1>
+			<span>용도와 예산에 맞춰 미리 구성된 견적을 선택하세요.</span>
+		</section>
+
+		<nav class="purpose-tabs" aria-label="추천 견적 용도">
+			<a th:href="@{/preset}" th:classappend="${activePurpose == ''} ? 'is-active'">용도 전체</a>
+			<a th:href="@{/preset(purpose='OFFICE')}" th:classappend="${activePurpose == 'OFFICE'} ? 'is-active'">사무용</a>
+			<a th:href="@{/preset(purpose='GAMING')}" th:classappend="${activePurpose == 'GAMING'} ? 'is-active'">게이밍</a>
+			<a th:href="@{/preset(purpose='VIDEO_EDIT')}" th:classappend="${activePurpose == 'VIDEO_EDIT'} ? 'is-active'">영상 편집</a>
+			<a th:href="@{/preset(purpose='BEGINNER')}" th:classappend="${activePurpose == 'BEGINNER'} ? 'is-active'">입문용</a>
+		</nav>
+
+		<section class="build-grid" aria-label="추천 견적 목록" th:if="${!#lists.isEmpty(presets)}">
+			<article class="build-card" th:each="preset : ${presets}">
+				<div
+					class="build-card-top"
+					th:classappend="${preset.purposeTag == 'OFFICE'} ? 'office'
+						: (${preset.purposeTag == 'VIDEO_EDIT'} ? 'creator' : 'gaming')">
+					<span th:switch="${preset.purposeTag}">
+						<th:block th:case="'OFFICE'">사무용</th:block>
+						<th:block th:case="'GAMING'">게이밍</th:block>
+						<th:block th:case="'VIDEO_EDIT'">영상 편집</th:block>
+						<th:block th:case="'BEGINNER'">입문용</th:block>
+						<th:block th:case="*">추천 견적</th:block>
+					</span>
+				</div>
+				<div class="build-card-body">
+					<p th:text="${preset.summaryDescription}">한줄 설명</p>
+					<h2 th:text="${preset.quoteName}">견적명</h2>
+					<strong th:text="|${#numbers.formatInteger(preset.totalPrice, 0, 'COMMA')}원|">0원</strong>
+					<ul th:if="${!#lists.isEmpty(preset.highlightSpecs)}">
+						<li th:each="spec : ${preset.highlightSpecs}" th:text="${spec}">부품</li>
+					</ul>
+					<a th:href="@{/preset/{id}(id=${preset.quoteId})}">상세 보기</a>
+				</div>
+			</article>
+		</section>
+
+		<p class="empty-products" th:if="${#lists.isEmpty(presets)}">
+			해당 용도의 추천 견적을 준비 중입니다.
+		</p>
+	</main>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>
