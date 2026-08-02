@@ -70,9 +70,11 @@ public class SecurityConfig {
 					"/mypage/**",
 					"/members/social-password",
 					"/orders/**",
+					"/payments/**",
 					"/api/cart/**",
 					"/api/orders/**",
-					"/api/addresses/**"
+					"/api/addresses/**",
+					"/api/payments/**"
 				).authenticated()
 				.anyRequest().permitAll()
 			)

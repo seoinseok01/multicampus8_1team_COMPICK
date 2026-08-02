@@ -1,5 +1,6 @@
 package com.boot.compick.quote.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.stereotype.Controller;
@@ -29,10 +30,11 @@ public class QuotePageController {
 	public String newQuote(
 		@RequestParam(required = false) Long basedOn,
 		@RequestParam(required = false) Long productId,
+		Principal principal,
 		Model model
 	) {
 		model.addAttribute("categoryTabs", CategoryDisplay.CATEGORY_TABS);
-		model.addAttribute("initialItemsJson", writeJson(initialItems(basedOn, productId)));
+		model.addAttribute("initialItemsJson", writeJson(initialItems(basedOn, productId, principal)));
 		return "shopping/quote-new";
 	}
 
@@ -50,9 +52,10 @@ public class QuotePageController {
 		return "shopping/preset-detail";
 	}
 
-	private List<QuoteItemView> initialItems(Long basedOn, Long productId) {
+	private List<QuoteItemView> initialItems(Long basedOn, Long productId, Principal principal) {
 		if (basedOn != null) {
-			return quoteService.findPresetDetail(basedOn).items();
+			String loginId = principal == null ? null : principal.getName();
+			return quoteService.findQuoteItemsForEditing(basedOn, loginId);
 		}
 		if (productId != null) {
 			return List.of(quoteService.findProductAsQuoteItem(productId));

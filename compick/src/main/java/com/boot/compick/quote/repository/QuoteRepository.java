@@ -15,6 +15,9 @@ public interface QuoteRepository extends JpaRepository<QuoteEntity, Long> {
 	@EntityGraph(attributePaths = "items")
 	Optional<QuoteEntity> findByQuoteIdAndQuoteType(Long quoteId, QuoteType quoteType);
 
+	@EntityGraph(attributePaths = "items")
+	Optional<QuoteEntity> findById(Long quoteId);
+
 	List<QuoteEntity> findByQuoteTypeOrderByQuoteIdAsc(QuoteType quoteType);
 
 	List<QuoteEntity> findByQuoteTypeAndPurposeTagOrderByQuoteIdAsc(

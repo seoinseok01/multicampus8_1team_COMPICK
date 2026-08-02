@@ -66,7 +66,27 @@ public class CartQuoteItemEntity {
 		quantity += amount;
 	}
 
+	public void changeSelected(boolean isSelected) {
+		selected = isSelected ? "Y" : "N";
+	}
+
+	public Long getCartQuoteItemId() {
+		return cartQuoteItemId;
+	}
+
+	public Long getCartId() {
+		return cart.getCartId();
+	}
+
+	public Long getQuoteId() {
+		return quoteId;
+	}
+
 	public int getQuantity() {
 		return quantity;
+	}
+
+	public boolean isSelected() {
+		return "Y".equals(selected);
 	}
 }

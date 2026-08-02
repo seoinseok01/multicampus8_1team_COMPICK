@@ -1,8 +1,11 @@
 package com.boot.compick.member.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +29,11 @@ public class AddressApiController {
 
 	public AddressApiController(AddressService addressService) {
 		this.addressService = addressService;
+	}
+
+	@GetMapping
+	public List<AddressResponse> list(Authentication authentication) {
+		return addressService.findAll(authentication.getName());
 	}
 
 	@PostMapping

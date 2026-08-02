@@ -1,5 +1,6 @@
 package com.boot.compick.cart.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,6 +16,8 @@ public interface CartProductItemRepository
 		Long cartId,
 		Long productId
 	);
+
+	List<CartProductItemEntity> findByCartCartIdOrderByCartProductItemIdDesc(Long cartId);
 
 	@Query("""
 		select coalesce(sum(item.quantity), 0)

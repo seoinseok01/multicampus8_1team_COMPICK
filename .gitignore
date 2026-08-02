@@ -3,6 +3,8 @@
 .LSOverride
 .env
 CLAUDE.md
+.claude/
+claude_docs/
 .png
 .xlxs
 HELP.md

@@ -3,7 +3,11 @@
   "configurations": [
     {
       "name": "compick",
-      "url": "http://localhost:8787",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd compick && set -a && source .env && set +a && ./mvnw spring-boot:run"
+      ],
       "port": 8787
     }
   ]

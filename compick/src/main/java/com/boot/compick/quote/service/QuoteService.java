@@ -133,6 +133,29 @@ public class QuoteService {
 		);
 	}
 
+	/**
+	 * "/quotes/new?basedOn=" 프리필용. PRESET은 공개 데이터라 누구나 볼 수 있지만,
+	 * USER 견적(장바구니의 "견적 수정" 버튼이 여기로 옴)은 본인 것일 때만 열람 가능하도록
+	 * 소유자를 확인한다 - 아니면 다른 회원의 quoteId를 넣어 견적 내용을 훔쳐볼 수 있다.
+	 */
+	public List<QuoteItemView> findQuoteItemsForEditing(Long quoteId, String loginId) {
+		QuoteEntity quote = quoteRepository.findById(quoteId)
+			.orElseThrow(() -> new ResponseStatusException(
+				HttpStatus.NOT_FOUND,
+				"견적을 찾을 수 없습니다."
+			));
+
+		if (quote.getQuoteType() != QuoteType.PRESET) {
+			Long memberId = loginId == null ? null : memberService.findActiveByLoginId(loginId).getId();
+			if (memberId == null || !memberId.equals(quote.getMemberId())) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "견적을 찾을 수 없습니다.");
+			}
+		}
+
+		Map<Long, ProductEntity> productsById = productsById(quote.getItems());
+		return toItemViews(quote.getItems(), productsById);
+	}
+
 	public QuoteItemView findProductAsQuoteItem(Long productId) {
 		ProductEntity product = productRepository.findById(productId)
 			.orElseThrow(() -> new ResponseStatusException(

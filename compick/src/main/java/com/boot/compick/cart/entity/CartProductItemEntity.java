@@ -70,7 +70,34 @@ public class CartProductItemEntity {
 		quantity += amount;
 	}
 
+	public void changeQuantity(int newQuantity) {
+		if (newQuantity < 1) {
+			throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
+		}
+		quantity = newQuantity;
+	}
+
+	public void changeSelected(boolean isSelected) {
+		selected = isSelected ? "Y" : "N";
+	}
+
+	public Long getCartProductItemId() {
+		return cartProductItemId;
+	}
+
+	public Long getCartId() {
+		return cart.getCartId();
+	}
+
+	public Long getProductId() {
+		return productId;
+	}
+
 	public int getQuantity() {
 		return quantity;
+	}
+
+	public boolean isSelected() {
+		return "Y".equals(selected);
 	}
 }
