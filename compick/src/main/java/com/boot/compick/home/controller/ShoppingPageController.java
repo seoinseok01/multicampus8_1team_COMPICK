@@ -38,9 +38,4 @@ public class ShoppingPageController {
 		);
 		return "shopping/products";
 	}
-
-	@GetMapping("/ai-quotes")
-	public String aiQuotes() {
-		return "shopping/ai-quotes";
-	}
 }
