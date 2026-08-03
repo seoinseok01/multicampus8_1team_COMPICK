@@ -1,9 +1,11 @@
 package com.boot.compick.order.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
 @Table(name = "ORDER_GROUP")
+@Getter
 public class OrderGroupEntity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "order_group_id") private Long id;
@@ -20,6 +22,17 @@ public class OrderGroupEntity {
 		OrderGroupEntity group = new OrderGroupEntity();
 		group.order = order; group.groupType = "PRODUCT"; group.groupName = "장바구니 상품";
 		group.groupQuantity = 1; group.assemblyType = "SELF";
+		return group;
+	}
+
+	public static OrderGroupEntity createQuote(OrderEntity order, Long quoteId, String name, int quantity) {
+		OrderGroupEntity group = new OrderGroupEntity();
+		group.order = order;
+		group.sourceQuoteId = quoteId;
+		group.groupType = "QUOTE";
+		group.groupName = name;
+		group.groupQuantity = quantity;
+		group.assemblyType = "SELF";
 		return group;
 	}
 	public Long getId() { return id; }

@@ -29,7 +29,7 @@ public class OrderController {
 	@GetMapping({"/order", "/orders/new"})
 	public String form(Principal principal, Model model) {
 		var checkout = checkoutService.getCheckout(principal.getName());
-		if (checkout.items().isEmpty()) {
+		if (checkout.isEmpty()) {
 			return "redirect:/cart?empty";
 		}
 
@@ -52,11 +52,24 @@ public class OrderController {
 		RedirectAttributes redirect) {
 		try {
 			String orderNumber = orderService.create(principal.getName(), request).getOrderNumber();
-			return "redirect:/orders/" + orderNumber + "/payment";
+			redirect.addFlashAttribute("message", "주문이 생성되었습니다. 결제를 진행해 주세요.");
+			return "redirect:/orders";
 		} catch (IllegalArgumentException e) {
 			redirect.addFlashAttribute("error", e.getMessage());
 			return "redirect:/orders/new";
 		}
+	}
+	@GetMapping("/orders")
+	public String history(Principal principal, Model model) {
+		model.addAttribute("orders", orderService.findAllOwned(principal.getName()));
+		return "order/history";
+	}
+	@GetMapping("/orders/{orderNumber}")
+	public String detail(Principal principal, @PathVariable String orderNumber, Model model) {
+		OrderEntity order = orderService.findOwned(principal.getName(), orderNumber);
+		model.addAttribute("order", order);
+		model.addAttribute("groups", orderService.getGroups(order.getId()));
+		return "order/detail";
 	}
 	@GetMapping("/orders/{orderNumber}/payment")
 	public String payment(Principal principal, @PathVariable String orderNumber, Model model) {

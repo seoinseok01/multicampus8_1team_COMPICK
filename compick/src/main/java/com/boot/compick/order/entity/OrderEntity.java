@@ -50,4 +50,5 @@ public class OrderEntity {
 	}
 
 	public void markPaid() { status = OrderStatus.PAID; updatedAt = LocalDateTime.now(); }
+	public void cancel() { status = OrderStatus.CANCELLED; updatedAt = LocalDateTime.now(); }
 }

@@ -1,0 +1,14 @@
+.success { background: #edf9f1; color: #16883e; }
+.quote-card { margin: 20px 0; border: 2px solid #d9dee8; border-radius: 12px; overflow: hidden; }
+.quote-card header { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 18px 20px; background: #f4f7ff; }
+.quote-card header div { display: flex; flex-direction: column; gap: 5px; }
+.quote-card header span { width: max-content; padding: 4px 8px; border-radius: 20px; background: #dfe9ff; color: #2463eb; font-size: 12px; font-weight: 800; }
+.quote-card header b { white-space: nowrap; color: #2463eb; }
+.quote-component { display: flex; justify-content: space-between; gap: 20px; padding: 12px 20px; border-top: 1px solid #edf0f5; }
+.quote-component small { color: #667085; white-space: nowrap; }
+.quote-card footer { padding: 13px 20px; background: #fafbfc; color: #667085; font-size: 13px; }
+.quote-select { position: relative; display: block; padding-left: 34px; cursor: pointer; }
+.quote-select > input { position: absolute; left: 0; top: 26px; width: 20px; height: 20px; accent-color: #2463eb; }
+.quote-select > input:not(:checked) + .quote-card { border-color: #d9dee8; }
+.quote-select > input:checked + .quote-card { border-color: #2463eb; }
+.selection-save { width: 100%; margin-top: 10px; padding: 12px; border: 1px solid #cfd7e6; border-radius: 10px; background: #fff; cursor: pointer; }

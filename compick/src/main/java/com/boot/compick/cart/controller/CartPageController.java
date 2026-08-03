@@ -14,7 +14,7 @@ public class CartPageController {
 
 	@GetMapping("/cart")
 	public String cart(Principal principal, Model model) {
-		model.addAttribute("checkout", checkoutService.getCheckout(principal.getName()));
+		model.addAttribute("cart", checkoutService.getCart(principal.getName()));
 		return "cart/index";
 	}
 }

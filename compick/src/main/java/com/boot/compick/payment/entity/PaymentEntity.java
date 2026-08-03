@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "PAYMENT")
+@lombok.Getter
 public class PaymentEntity {
 	@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "payment_id") private Long id;
@@ -19,6 +20,8 @@ public class PaymentEntity {
 	@Column(name = "requested_at", nullable = false) private LocalDateTime requestedAt;
 	@Column(name = "approved_at") private LocalDateTime approvedAt;
 	@Column(name = "cancelled_at") private LocalDateTime cancelledAt;
+	@Column(name = "refunded_amount") private Long refundedAmount;
+	@Column(name = "cancel_reason", length = 200) private String cancelReason;
 
 	protected PaymentEntity() {}
 	public static PaymentEntity approved(OrderEntity order, String method, String paymentKey, String approvalNumber) {
@@ -27,6 +30,13 @@ public class PaymentEntity {
 		payment.amount = order.getFinalAmount(); payment.status = "APPROVED";
 		payment.transactionId = paymentKey; payment.approvalNumber = approvalNumber;
 		payment.requestedAt = LocalDateTime.now(); payment.approvedAt = payment.requestedAt;
+		payment.refundedAmount = 0L;
 		return payment;
+	}
+	public void cancel(long refundedAmount, String reason) {
+		this.status = "CANCELLED";
+		this.refundedAmount = refundedAmount;
+		this.cancelReason = reason;
+		this.cancelledAt = LocalDateTime.now();
 	}
 }

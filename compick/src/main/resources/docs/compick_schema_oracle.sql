@@ -431,6 +431,8 @@ CREATE TABLE PAYMENT (
     requested_at            TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
     approved_at             TIMESTAMP,
     cancelled_at            TIMESTAMP,
+    refunded_amount         NUMBER(12) DEFAULT 0,
+    cancel_reason           VARCHAR2(200),
 
     CONSTRAINT pk_payment PRIMARY KEY (payment_id),
     CONSTRAINT fk_payment_order

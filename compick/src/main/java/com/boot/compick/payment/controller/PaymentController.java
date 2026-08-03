@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.boot.compick.payment.service.*;
 import lombok.RequiredArgsConstructor;
 
@@ -32,5 +33,21 @@ public class PaymentController {
 		@RequestParam(required=false) String orderId, Model model) {
 		model.addAttribute("code", code); model.addAttribute("message", message); model.addAttribute("orderId", orderId);
 		return "payment/fail";
+	}
+	@PostMapping("/orders/{orderNumber}/cancel")
+	public String cancel(Principal principal, @PathVariable String orderNumber,
+		@RequestParam(defaultValue = "고객 요청") String reason, RedirectAttributes redirect) {
+		try {
+			var result = payments.cancel(principal.getName(), orderNumber, reason);
+			if (result.pendingOrderDeleted()) {
+				redirect.addFlashAttribute("message", "결제 대기 주문을 취소하고 견적서를 장바구니로 되돌렸습니다.");
+				return "redirect:/cart";
+			}
+			redirect.addFlashAttribute("message",
+				String.format("주문을 취소하고 %,d원을 환불했습니다.", result.refundedAmount()));
+		} catch (TossPaymentException | IllegalArgumentException e) {
+			redirect.addFlashAttribute("error", e.getMessage());
+		}
+		return "redirect:/orders/" + orderNumber;
 	}
 }

@@ -26,10 +26,4 @@ document.addEventListener("DOMContentLoaded", function () {
         form.querySelector("button[type='submit']").disabled = true;
     });
 
-    document.querySelectorAll(".integration-button").forEach((button) => {
-        button.addEventListener("click", () => {
-            const notice = document.querySelector(".integration-notice");
-            if (notice) notice.hidden = false;
-        });
-    });
 });

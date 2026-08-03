@@ -49,7 +49,7 @@
 		<a th:classappend="${active == 'address'} ? 'active'" th:href="@{/mypage/addresses}">
 			배송지 관리
 		</a>
-		<a th:href="@{/orders}">주문 내역</a>
+		<a th:classappend="${active == 'orders'} ? 'active'" th:href="@{/orders}">주문 내역</a>
 	</aside>
 </body>
 </html>

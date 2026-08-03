@@ -29,4 +29,21 @@ public class TossPaymentService {
 			throw new TossPaymentException("토스 결제 승인에 실패했습니다. (" + e.getStatusCode() + ")");
 		}
 	}
+	public Map<String,Object> cancel(String paymentKey, String orderId, String reason, Long amount) {
+		if (secretKey.isBlank()) throw new TossPaymentException("토스 시크릿 키가 설정되지 않았습니다.");
+		try {
+			Map<String,Object> body = new LinkedHashMap<>();
+			body.put("cancelReason", reason);
+			if (amount != null) body.put("cancelAmount", amount);
+			@SuppressWarnings("unchecked") Map<String,Object> response = client.post()
+				.uri("https://api.tosspayments.com/v1/payments/{paymentKey}/cancel", paymentKey)
+				.headers(h -> { h.setBasicAuth(secretKey, ""); h.set("Idempotency-Key",
+					UUID.nameUUIDFromBytes((orderId + "-cancel").getBytes(StandardCharsets.UTF_8)).toString()); })
+				.contentType(MediaType.APPLICATION_JSON).body(body).retrieve().body(Map.class);
+			if (response == null) throw new TossPaymentException("토스 결제 취소 응답이 비어 있습니다.");
+			return response;
+		} catch (RestClientResponseException e) {
+			throw new TossPaymentException("토스 결제 취소에 실패했습니다. (" + e.getStatusCode() + ")");
+		}
+	}
 }
