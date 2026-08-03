@@ -2,86 +2,78 @@ package com.boot.compick.order.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.List;
-import java.util.UUID;
-
+import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-
-import jakarta.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.boot.compick.member.entity.Address;
+import com.boot.compick.member.entity.Member;
+import com.boot.compick.member.service.AddressService;
+import com.boot.compick.member.service.MemberService;
+import com.boot.compick.order.dto.CreateOrderRequest;
+import com.boot.compick.order.entity.OrderEntity;
+import com.boot.compick.order.service.CheckoutService;
+import com.boot.compick.order.service.OrderService;
 
 @Controller
 public class OrderController {
-
-	private final String tossClientKey;
-
-	public OrderController(
-		@Value("${toss.payments.client-key:}") String tossClientKey
-	) {
-		this.tossClientKey = tossClientKey;
+	private final CheckoutService checkoutService; private final AddressService addressService;
+	private final MemberService memberService; private final OrderService orderService; private final String tossClientKey;
+	public OrderController(CheckoutService checkoutService, AddressService addressService, MemberService memberService,
+		OrderService orderService, @Value("${toss.payments.client-key:}") String tossClientKey) {
+		this.checkoutService=checkoutService; this.addressService=addressService; this.memberService=memberService;
+		this.orderService=orderService; this.tossClientKey=tossClientKey;
 	}
-
 	@GetMapping({"/order", "/orders/new"})
-	public String orderForm(
-		Principal principal,
-		HttpSession session,
-		Model model
-	) {
-		List<OrderItemView> items = List.of(
-			new OrderItemView(
-				"게이밍 PC 컴픽 에디션",
-				"AMD Ryzen 7 7800X3D · RTX 4070 SUPER",
-				1,
-				1_589_000,
-				"PC"
-			),
-			new OrderItemView(
-				"전문 조립 및 안정성 테스트",
-				"전문 기사 조립 · 2년 무상 방문 지원",
-				1,
-				329_000,
-				"TOOL"
-			)
-		);
+	public String form(Principal principal, Model model) {
+		var checkout = checkoutService.getCheckout(principal.getName());
+		if (checkout.items().isEmpty()) {
+			return "redirect:/cart?empty";
+		}
 
-		int productAmount = items.stream()
-			.mapToInt(item -> item.price() * item.quantity())
-			.sum();
-		int shippingFee = 0;
-		int totalAmount = productAmount + shippingFee;
-		String orderId = "COMPICK-" + UUID.randomUUID()
-			.toString()
-			.replace("-", "");
-		String customerKey = "CUSTOMER-" + UUID.nameUUIDFromBytes(
-			principal.getName().getBytes(StandardCharsets.UTF_8)
-		).toString().replace("-", "");
+		List<Address> addresses = addressService.findAll(principal.getName());
+		CreateOrderRequest request = new CreateOrderRequest();
+		addresses.stream()
+			.filter(Address::isDefault)
+			.findFirst()
+			.or(() -> addresses.stream().findFirst())
+			.map(Address::getId)
+			.ifPresent(request::setAddressId);
 
-		session.setAttribute("pendingPayment:" + orderId, totalAmount);
-
-		model.addAttribute("customerName", "서인석");
-		model.addAttribute("phoneNumber", "010-1234-0108");
-		model.addAttribute("address", "서울특별시 강남구 테헤란로 123, COMPICK 8층");
-		model.addAttribute("items", items);
-		model.addAttribute("productAmount", productAmount);
-		model.addAttribute("shippingFee", shippingFee);
-		model.addAttribute("totalAmount", totalAmount);
-		model.addAttribute("orderId", orderId);
-		model.addAttribute("orderName", "게이밍 PC 컴픽 에디션 외 1건");
-		model.addAttribute("customerKey", customerKey);
-		model.addAttribute("tossClientKey", tossClientKey);
-		model.addAttribute("tossConfigured", !tossClientKey.isBlank());
-
+		model.addAttribute("checkout", checkout);
+		model.addAttribute("addresses", addresses);
+		model.addAttribute("orderRequest", request);
 		return "order/form";
 	}
+	@PostMapping("/orders")
+	public String create(Principal principal, @ModelAttribute("orderRequest") CreateOrderRequest request,
+		RedirectAttributes redirect) {
+		try {
+			String orderNumber = orderService.create(principal.getName(), request).getOrderNumber();
+			return "redirect:/orders/" + orderNumber + "/payment";
+		} catch (IllegalArgumentException e) {
+			redirect.addFlashAttribute("error", e.getMessage());
+			return "redirect:/orders/new";
+		}
+	}
+	@GetMapping("/orders/{orderNumber}/payment")
+	public String payment(Principal principal, @PathVariable String orderNumber, Model model) {
+		OrderEntity order = orderService.findOwned(principal.getName(), orderNumber);
+		Member member = memberService.findActiveByLoginId(principal.getName());
+		model.addAttribute("order", order);
+		model.addAttribute("items", orderService.getItems(order.getId()));
+		model.addAttribute("tossClientKey", tossClientKey);
+		model.addAttribute("tossConfigured", !tossClientKey.isBlank());
+		model.addAttribute("customerName", member.getName());
+		model.addAttribute("customerKey", customerKey(principal.getName()));
+		return "order/payment";
+	}
 
-	record OrderItemView(
-		String name,
-		String description,
-		int quantity,
-		int price,
-		String icon
-	) {
+	private String customerKey(String loginId) {
+		return "CUSTOMER-" + UUID.nameUUIDFromBytes(loginId.getBytes(StandardCharsets.UTF_8))
+			.toString()
+			.replace("-", "");
 	}
 }

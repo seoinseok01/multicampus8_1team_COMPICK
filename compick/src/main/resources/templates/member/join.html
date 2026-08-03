@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>
+            회원가입 | COMPICK
+        </title>
+        <link rel="stylesheet" th:href="@{/css/main.css}">
+        <link rel="stylesheet" th:href="@{/css/member.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/header :: siteHeader}"></div>
+        <main class="page">
+            <h1>
+                회원가입
+            </h1>
+            <p class="subtitle">
+                로컬 계정을 만들고 바로 로그인합니다.
+            </p>
+            <section class="card form-card">
+                <h2>
+                    기본 정보
+                </h2>
+                <form th:action="@{/members/signup}" th:object="${joinForm}" method="post">
+                    <div class="notice error" th:if="${#fields.hasGlobalErrors()}" th:each="e:${#fields.globalErrors()}" th:text="${e}">
+                    </div>
+                    <label>
+                        아이디
+                        <div class="input-action">
+                            <input th:field="*{loginId}" placeholder="영문·숫자 4~20자">
+                            <button type="button" class="secondary" id="checkId">
+                                중복 확인
+                            </button>
+                        </div>
+                        <small id="idResult">
+                        </small>
+                        <small class="error" th:errors="*{loginId}">
+                        </small>
+                    </label>
+                    <label>
+                        비밀번호
+                        <input type="password" th:field="*{password}" placeholder="영문·숫자·특수문자 8자 이상">
+                        <small class="error" th:errors="*{password}">
+                        </small>
+                    </label>
+                    <label>
+                        비밀번호 확인
+                        <input type="password" th:field="*{passwordConfirm}" placeholder="비밀번호를 다시 입력">
+                        <small class="error" th:errors="*{passwordConfirm}">
+                        </small>
+                    </label>
+                    <label>
+                        이메일
+                        <div class="input-action"><input type="email" th:field="*{email}" placeholder="example@compick.com"><button type="button" class="secondary" id="sendEmailCode">인증번호 받기</button></div>
+                        <div class="input-action"><input id="emailCode" inputmode="numeric" maxlength="6" placeholder="6자리 인증번호"><button type="button" class="secondary" id="confirmEmailCode">인증 확인</button></div>
+                        <small id="emailResult"></small>
+                        <small class="error" th:errors="*{email}">
+                        </small>
+                    </label>
+                    <label>
+                        이름
+                        <input th:field="*{name}" placeholder="이름 입력">
+                        <small class="error" th:errors="*{name}">
+                        </small>
+                    </label>
+                    <label>
+                        휴대전화
+                        <input th:field="*{phone}" placeholder="010-0000-0000">
+                        <small class="error" th:errors="*{phone}">
+                        </small>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" th:field="*{termsAccepted}">
+                        이용약관과
+                        <a class="policy-link" style="color:#2563eb;text-decoration:underline" th:href="@{/privacy-policy}" target="privacyPolicy" onclick="window.open(this.href,'privacyPolicy','width=760,height=820,scrollbars=yes');return false;">
+                            개인정보 처리방침
+                        </a>
+                        에 동의합니다.
+                    </label>
+                    <small class="error" th:errors="*{termsAccepted}">
+                    </small>
+                    <button class="primary">
+                        가입하고 시작하기
+                    </button>
+                </form>
+            </section>
+        </main>
+        <div th:replace="~{fragments/footer :: siteFooter}"></div>
+        <script>
+            document.getElementById('checkId').onclick = async () => {
+                const loginId = document.getElementById('loginId').value;
+                const result = document.getElementById('idResult');
+
+                if (!/^[A-Za-z0-9]{4,20}$/.test(loginId)) {
+                    result.textContent = '영문과 숫자 4~20자로 입력해 주세요.';
+                    result.className = 'error';
+                    return;
+                }
+
+                const response = await fetch(
+                    '/api/members/check-login-id?loginId=' + encodeURIComponent(loginId)
+                );
+                const available = await response.json();
+
+                result.textContent = available
+                    ? '사용 가능한 아이디입니다.'
+                    : '이미 사용 중인 아이디입니다.';
+                result.className = available ? 'success' : 'error';
+            };
+            const verifyRequest = async (path, body) => {
+                const csrf = document.querySelector('input[name="_csrf"]');
+                const response = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json', ...(csrf ? {'X-CSRF-TOKEN':csrf.value} : {})}, body:JSON.stringify(body)});
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.message || '요청을 처리하지 못했습니다.');
+                return data;
+            };
+            document.getElementById('sendEmailCode').onclick = async () => { const result=document.getElementById('emailResult'); try { const data=await verifyRequest('/api/email-verifications/send',{email:document.getElementById('email').value,purpose:'SIGN_UP'}); result.textContent=data.message; result.className='success'; } catch(e){result.textContent=e.message;result.className='error';} };
+            document.getElementById('confirmEmailCode').onclick = async () => { const result=document.getElementById('emailResult'); try { const data=await verifyRequest('/api/email-verifications/confirm',{email:document.getElementById('email').value,purpose:'SIGN_UP',code:document.getElementById('emailCode').value}); result.textContent=data.message; result.className='success'; } catch(e){result.textContent=e.message;result.className='error';} };
+        </script>
+    </body>
+</html>

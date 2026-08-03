@@ -1,6 +1,7 @@
 package com.boot.compick.cart.repository;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +23,11 @@ public interface CartProductItemRepository
 		where item.cart.cartId = :cartId
 		""")
 	long sumQuantityByCartId(@Param("cartId") Long cartId);
+
+	List<CartProductItemEntity> findAllByCartCartIdAndSelectedOrderByCartProductItemId(
+		Long cartId,
+		String selected
+	);
+
+	void deleteAllByCartCartId(Long cartId);
 }

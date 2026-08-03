@@ -204,11 +204,5 @@
 	<p id="cart-feedback" class="cart-feedback" role="status" aria-live="polite" hidden></p>
 
 	<div th:replace="~{fragments/footer :: siteFooter}"></div>
-	<script th:if="${phoneMissing}">
-		window.alert(
-			"전화번호가 등록되지 않았습니다.\n" +
-			"마이페이지 > 회원정보 수정에서 전화번호를 등록해 주세요."
-		);
-	</script>
 </body>
 </html>

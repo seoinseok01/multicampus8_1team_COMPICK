@@ -43,6 +43,23 @@ class CompickApplicationTests {
 	}
 
 	@Test
+	void aiRecommendationPageRendersAndExplainsMissingApiKey() throws Exception {
+		mockMvc.perform(get("/ai-quotes"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(
+				org.hamcrest.Matchers.containsString("AI 견적 맞추기")
+			));
+
+		mockMvc.perform(post("/ai-quotes")
+				.with(csrf())
+				.param("requirements", "150만원 게임용 PC"))
+			.andExpect(status().isOk())
+			.andExpect(content().string(
+				org.hamcrest.Matchers.containsString("GEMINI_API_KEY 환경변수를 설정해 주세요.")
+			));
+	}
+
+	@Test
 	@Sql(statements = {
 		"INSERT INTO CATEGORY (category_name) VALUES ('CPU')",
 		"""

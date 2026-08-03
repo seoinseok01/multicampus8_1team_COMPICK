@@ -73,4 +73,16 @@ public class CartProductItemEntity {
 	public int getQuantity() {
 		return quantity;
 	}
+
+	public Long getCartProductItemId() {
+		return cartProductItemId;
+	}
+
+	public Long getProductId() {
+		return productId;
+	}
+
+	public boolean isSelected() {
+		return "Y".equals(selected);
+	}
 }

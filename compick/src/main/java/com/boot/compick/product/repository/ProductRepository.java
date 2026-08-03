@@ -11,7 +11,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
 
 	@EntityGraph(attributePaths = "category")
 	List<ProductEntity>
-		findTop4BySalesStatusAndStockQuantityGreaterThanOrderByRatingCountDesc(
+		findTop4BySalesStatusAndStockQuantityGreaterThanOrderByRatingCountDescCreatedAtDesc(
 			String salesStatus,
 			int stockQuantity
 		);
