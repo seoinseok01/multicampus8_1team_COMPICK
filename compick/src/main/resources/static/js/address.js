@@ -1,13 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-	const form = document.querySelector("#address-form");
-	if (!form) {
-		return;
-	}
-
 	const token = document.querySelector('meta[name="_csrf"]')?.content;
 	const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
-	const message = document.querySelector("#address-message");
-	const addressId = document.querySelector("#addressId");
 
 	function headers() {
 		const result = {"Content-Type": "application/json"};
@@ -17,24 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		return result;
 	}
 
-	function payload() {
-		return {
-			addressName: document.querySelector("#addressName").value,
-			recipientName: document.querySelector("#recipientName").value,
-			phone: document.querySelector("#addressPhone").value,
-			zipCode: document.querySelector("#zipCode").value,
-			address1: document.querySelector("#address1").value,
-			address2: document.querySelector("#address2").value,
-			isDefault: document.querySelector("#isDefault").checked
-		};
-	}
-
-	async function request(url, method, body) {
-		const response = await fetch(url, {
-			method,
-			headers: headers(),
-			body: body ? JSON.stringify(body) : undefined
-		});
+	async function request(url, method) {
+		const response = await fetch(url, { method, headers: headers() });
 		if (!response.ok) {
 			let detail = "요청을 처리하지 못했습니다.";
 			try {
@@ -46,54 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			throw new Error(detail);
 		}
 	}
-
-	form.addEventListener("submit", async event => {
-		event.preventDefault();
-		const id = addressId.value;
-		try {
-			await request(
-				id ? `/api/addresses/${id}` : "/api/addresses",
-				id ? "PUT" : "POST",
-				payload()
-			);
-			window.location.reload();
-		} catch (error) {
-			message.textContent = error.message;
-			message.className = "form-message error";
-		}
-	});
-
-	document.querySelector("[data-address-search]")?.addEventListener("click", () => {
-		new daum.Postcode({
-			oncomplete: data => {
-				document.querySelector("#zipCode").value = data.zonecode;
-				document.querySelector("#address1").value = data.roadAddress || data.jibunAddress;
-				document.querySelector("#address2").focus();
-			}
-		}).open();
-	});
-
-	form.addEventListener("reset", () => {
-		addressId.value = "";
-		document.querySelector("#address-form-title").textContent = "배송지 등록";
-		message.textContent = "";
-	});
-
-	document.querySelectorAll("[data-address-edit]").forEach(button => {
-		button.addEventListener("click", () => {
-			const item = button.closest("[data-address-id]");
-			addressId.value = item.dataset.addressId;
-			document.querySelector("#addressName").value = item.dataset.addressName;
-			document.querySelector("#recipientName").value = item.dataset.recipientName;
-			document.querySelector("#addressPhone").value = item.dataset.phone;
-			document.querySelector("#zipCode").value = item.dataset.zipCode;
-			document.querySelector("#address1").value = item.dataset.address1;
-			document.querySelector("#address2").value = item.dataset.address2 || "";
-			document.querySelector("#isDefault").checked = item.dataset.default === "true";
-			document.querySelector("#address-form-title").textContent = "배송지 수정";
-			form.scrollIntoView({behavior: "smooth"});
-		});
-	});
 
 	document.querySelectorAll("[data-address-delete]").forEach(button => {
 		button.addEventListener("click", async () => {

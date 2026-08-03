@@ -63,6 +63,18 @@ document.addEventListener("DOMContentLoaded", () => {
 		);
 	});
 
+	const passwordToggle = document.querySelector("[data-password-toggle]");
+	const passwordSection = document.querySelector("[data-password-section]");
+	if (passwordToggle && passwordSection) {
+		const hasPasswordError = passwordSection.querySelector(".field-error")?.textContent.trim();
+		if (hasPasswordError) {
+			passwordSection.classList.add("is-open");
+		}
+		passwordToggle.addEventListener("click", () => {
+			passwordSection.classList.toggle("is-open");
+		});
+	}
+
 	async function checkDuplicate(path, parameter, value, output) {
 		if (!value.trim()) {
 			output.textContent = "값을 먼저 입력해 주세요.";

@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -26,6 +27,7 @@ import com.boot.compick.member.security.CompickOidcUser;
 import com.boot.compick.member.service.AddressService;
 import com.boot.compick.member.service.MemberService;
 import com.boot.compick.member.service.SocialAccountService;
+import com.boot.compick.order.service.OrderService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +39,7 @@ public class MemberPageController {
 	private final MemberService memberService;
 	private final AddressService addressService;
 	private final SocialAccountService socialAccountService;
+	private final OrderService orderService;
 	private final AuthenticationManager authenticationManager;
 	private final ObjectProvider<ClientRegistrationRepository>
 		clientRegistrations;
@@ -47,12 +50,14 @@ public class MemberPageController {
 		MemberService memberService,
 		AddressService addressService,
 		SocialAccountService socialAccountService,
+		OrderService orderService,
 		AuthenticationManager authenticationManager,
 		ObjectProvider<ClientRegistrationRepository> clientRegistrations
 	) {
 		this.memberService = memberService;
 		this.addressService = addressService;
 		this.socialAccountService = socialAccountService;
+		this.orderService = orderService;
 		this.authenticationManager = authenticationManager;
 		this.clientRegistrations = clientRegistrations;
 	}
@@ -181,8 +186,19 @@ public class MemberPageController {
 	@GetMapping("/mypage")
 	public String mypage(Authentication authentication, Model model) {
 		String loginId = authentication.getName();
+		var addresses = addressService.findAll(loginId);
+		var orders = orderService.findOrders(loginId, null);
+
 		model.addAttribute("member", memberService.getSummary(loginId));
-		model.addAttribute("addresses", addressService.findAll(loginId));
+		model.addAttribute("addresses", addresses);
+		model.addAttribute(
+			"defaultAddress",
+			addresses.stream().filter(address -> address.isDefault()).findFirst().orElse(null)
+		);
+		model.addAttribute(
+			"recentOrder",
+			orders.isEmpty() ? null : orders.get(0)
+		);
 		model.addAttribute("phoneMissing", memberService.isPhoneMissing(loginId));
 		return "mypage/index";
 	}
@@ -272,6 +288,21 @@ public class MemberPageController {
 			addressService.findAll(authentication.getName())
 		);
 		return "mypage/address-list";
+	}
+
+	@GetMapping("/mypage/addresses/new")
+	public String newAddressForm(Model model) {
+		model.addAttribute("addressId", null);
+		return "mypage/address-form";
+	}
+
+	@GetMapping("/mypage/addresses/{addressId}/edit")
+	public String editAddressForm(
+		@PathVariable Long addressId,
+		Model model
+	) {
+		model.addAttribute("addressId", addressId);
+		return "mypage/address-form";
 	}
 
 	private boolean isLoggedIn(Authentication authentication) {

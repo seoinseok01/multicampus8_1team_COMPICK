@@ -276,6 +276,180 @@
 	min-height: 36px;
 }
 
+.mypage-layout {
+	display: grid;
+	grid-template-columns: 260px 1fr;
+	gap: 32px;
+	align-items: start;
+}
+
+.mypage-sidebar {
+	display: grid;
+	gap: 6px;
+	padding: 20px;
+	border: 1px solid #dbe3ef;
+	border-radius: 16px;
+	background: #fff;
+}
+
+.mypage-sidebar h2 {
+	margin: 0 0 10px;
+	font-size: 16px;
+}
+
+.mypage-sidebar a {
+	padding: 12px 14px;
+	border-radius: 10px;
+	color: #172033;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.mypage-sidebar a.is-active {
+	border: 1px solid #bfdbfe;
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+
+.mypage-content {
+	display: grid;
+	gap: 28px;
+}
+
+.profile-card {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	padding: 28px;
+	border: 1px solid #dbe3ef;
+	border-radius: 16px;
+	background: #fff;
+}
+
+.profile-avatar {
+	display: grid;
+	flex-shrink: 0;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: #e2e8f0;
+	color: #64748b;
+	font-weight: 700;
+	font-size: 20px;
+	place-items: center;
+}
+
+.profile-card-body {
+	flex: 1;
+	display: grid;
+	gap: 4px;
+}
+
+.profile-card-body h2 {
+	margin: 0;
+}
+
+.profile-card-body p {
+	margin: 0;
+	color: #64748b;
+}
+
+.summary-section h2 {
+	margin: 0 0 14px;
+	font-size: 18px;
+}
+
+.summary-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 22px;
+	border: 1px solid #dbe3ef;
+	border-radius: 12px;
+	background: #fff;
+}
+
+.summary-card p {
+	margin: 4px 0 0;
+	color: #64748b;
+}
+
+.summary-card .status-label {
+	color: #15803d;
+	font-weight: 700;
+}
+
+.summary-empty {
+	padding: 22px;
+	border: 1px dashed #dbe3ef;
+	border-radius: 12px;
+	color: #64748b;
+}
+
+.account-card {
+	padding: 32px;
+	border: 1px solid #dbe3ef;
+	border-radius: 16px;
+	background: #fff;
+}
+
+.account-card h2 {
+	margin: 0 0 24px;
+}
+
+.member-form input[readonly] {
+	background: #f1f5f9;
+	color: #64748b;
+}
+
+.password-toggle {
+	margin-top: 8px;
+}
+
+.password-section {
+	display: none;
+	gap: 10px;
+	margin-top: 8px;
+}
+
+.password-section.is-open {
+	display: grid;
+}
+
+.address-card-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.address-card-header .default-tag {
+	color: #2563eb;
+	font-size: 12px;
+	font-weight: 700;
+}
+
+@media (max-width: 720px) {
+	.mypage-layout {
+		grid-template-columns: 1fr;
+	}
+
+	.mypage-sidebar {
+		grid-auto-flow: column;
+		overflow-x: auto;
+	}
+
+	.profile-card {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.summary-card {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}
+
 @media (max-width: 720px) {
 	.member-page,
 	.mypage,
