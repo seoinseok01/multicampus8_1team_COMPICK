@@ -5,9 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
 	}
 
 	const addressBox = document.querySelector("[data-address-box]");
+	const addressFormSlide = document.querySelector("[data-address-form-slide]");
+	const addressForm = document.querySelector("[data-address-form]");
+	const addressFormMessage = document.querySelector("[data-address-form-message]");
+	const addressFormCancel = document.querySelector("[data-address-form-cancel]");
 	const productAmountElement = document.querySelector("[data-product-amount]");
 	const totalAmountElement = document.querySelector("[data-total-amount]");
-	const methodButtons = document.querySelectorAll("[data-method]");
 	const agreeCheckbox = document.querySelector("[data-agree-checkbox]");
 	const payButton = document.querySelector("[data-pay-button]");
 	const feedback = document.querySelector("#cart-feedback");
@@ -16,8 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	const state = {
 		productAmount: 0,
 		addresses: [],
-		selectedAddressId: null,
-		selectedMethod: null
+		selectedAddressId: null
 	};
 
 	let feedbackTimer = null;
@@ -122,10 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
 			message.textContent = "등록된 배송지가 없습니다.";
 			const hint = document.createElement("p");
 			hint.textContent = "주문을 진행하려면 배송지를 먼저 등록해 주세요.";
-			const link = document.createElement("a");
-			link.href = "/mypage/addresses";
-			link.textContent = "+ 배송지 등록";
-			empty.append(message, hint, link);
+			const registerButton = document.createElement("button");
+			registerButton.type = "button";
+			registerButton.className = "line-button";
+			registerButton.textContent = "+ 배송지 등록";
+			registerButton.addEventListener("click", () => openAddressForm());
+			empty.append(message, hint, registerButton);
 			addressBox.appendChild(empty);
 			state.selectedAddressId = null;
 			return;
@@ -155,13 +159,38 @@ document.addEventListener("DOMContentLoaded", () => {
 		detail.className = "address-detail";
 		detail.dataset.addressDetail = "true";
 
-		const registerLink = document.createElement("a");
-		registerLink.className = "line-button";
-		registerLink.href = "/mypage/addresses";
-		registerLink.textContent = "배송지 관리";
+		const actions = document.createElement("div");
+		actions.className = "address-box-actions";
 
-		addressBox.append(select, detail, registerLink);
+		const addNewButton = document.createElement("button");
+		addNewButton.type = "button";
+		addNewButton.className = "line-button";
+		addNewButton.textContent = "+ 새 배송지 등록";
+		addNewButton.addEventListener("click", () => openAddressForm());
+
+		const manageLink = document.createElement("a");
+		manageLink.className = "line-button";
+		manageLink.href = "/mypage/addresses";
+		manageLink.textContent = "배송지 관리";
+
+		actions.append(addNewButton, manageLink);
+		addressBox.append(select, detail, actions);
 		renderSelectedAddressDetail();
+	};
+
+	const openAddressForm = () => {
+		if (!addressFormSlide) return;
+		addressFormSlide.classList.add("is-open");
+		addressFormSlide.style.maxHeight = `${addressFormSlide.scrollHeight}px`;
+		window.setTimeout(() => addressForm?.querySelector("input[name='recipientName']")?.focus(), 300);
+	};
+
+	const closeAddressForm = () => {
+		if (!addressFormSlide) return;
+		addressFormSlide.classList.remove("is-open");
+		addressFormSlide.style.maxHeight = "";
+		addressForm?.reset();
+		if (addressFormMessage) addressFormMessage.textContent = "";
 	};
 
 	const renderSelectedAddressDetail = () => {
@@ -185,9 +214,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (state.addresses.length === 0) {
 			payButton.disabled = true;
 			payButton.textContent = "배송지 등록 후 결제하기";
-		} else if (!state.selectedMethod) {
+		} else if (pageData.tossConfigured !== "true") {
 			payButton.disabled = true;
-			payButton.textContent = "결제 수단을 선택해 주세요";
+			payButton.textContent = "결제 연동이 설정되지 않았습니다";
 		} else if (!agreeCheckbox?.checked) {
 			payButton.disabled = true;
 			payButton.textContent = "주문 내용에 동의해 주세요";
@@ -196,38 +225,62 @@ document.addEventListener("DOMContentLoaded", () => {
 			payButton.textContent = "주문할 상품이 없습니다";
 		} else {
 			payButton.disabled = false;
-			payButton.textContent = `${formatPrice(state.productAmount)} 결제하기`;
+			payButton.textContent = "결제하기";
 		}
 	};
-
-	methodButtons.forEach((button) => {
-		const method = button.dataset.method;
-		const configured = method === "KAKAO_PAY" ? pageData.kakaoConfigured === "true" : pageData.tossConfigured === "true";
-		if (!configured) {
-			button.disabled = true;
-			button.title = "결제 연동이 설정되지 않았습니다.";
-		}
-		button.addEventListener("click", () => {
-			if (button.disabled) return;
-			methodButtons.forEach((b) => b.classList.toggle("is-active", b === button));
-			state.selectedMethod = method;
-			updatePayButton();
-		});
-	});
 
 	agreeCheckbox?.addEventListener("change", updatePayButton);
 
-	const originUrl = () => window.location.origin;
+	addressFormCancel?.addEventListener("click", () => closeAddressForm());
 
-	const payWithKakao = async (orderNumber) => {
-		const result = await request("/api/payments/kakao/ready", {
-			method: "POST",
-			body: JSON.stringify({ orderNumber })
-		});
-		if (result?.redirectUrl) {
-			window.location.assign(result.redirectUrl);
+	addressForm?.querySelector("[data-address-search]")?.addEventListener("click", () => {
+		new daum.Postcode({
+			oncomplete: data => {
+				addressForm.querySelector("input[name='zipCode']").value = data.zonecode;
+				addressForm.querySelector("input[name='address1']").value =
+					data.roadAddress || data.jibunAddress;
+				addressForm.querySelector("input[name='address2']").focus();
+			}
+		}).open();
+	});
+
+	addressForm?.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		const formData = new FormData(addressForm);
+		const submitButton = addressForm.querySelector("button[type='submit']");
+		submitButton.disabled = true;
+		try {
+			const saved = await request("/api/addresses", {
+				method: "POST",
+				body: JSON.stringify({
+					addressName: formData.get("addressName"),
+					recipientName: formData.get("recipientName"),
+					phone: formData.get("phone"),
+					zipCode: formData.get("zipCode"),
+					address1: formData.get("address1"),
+					address2: formData.get("address2"),
+					isDefault: formData.get("isDefault") === "on"
+				})
+			});
+			if (!saved) return;
+
+			if (saved.isDefault) {
+				state.addresses = state.addresses.map((address) => ({ ...address, isDefault: false }));
+			}
+			state.addresses.push(saved);
+			state.selectedAddressId = saved.addressId;
+			closeAddressForm();
+			renderAddress();
+			updatePayButton();
+			showFeedback("배송지를 등록했습니다.");
+		} catch (error) {
+			if (addressFormMessage) addressFormMessage.textContent = error.message;
+		} finally {
+			submitButton.disabled = false;
 		}
-	};
+	});
+
+	const originUrl = () => window.location.origin;
 
 	const payWithToss = async (orderNumber, orderName, amount) => {
 		if (typeof TossPayments !== "function") {
@@ -240,8 +293,8 @@ document.addEventListener("DOMContentLoaded", () => {
 			amount: { currency: "KRW", value: Number(amount) },
 			orderId: orderNumber,
 			orderName,
-			successUrl: `${originUrl()}/payments/toss/success`,
-			failUrl: `${originUrl()}/payments/toss/fail`,
+			successUrl: `${originUrl()}/payments/success`,
+			failUrl: `${originUrl()}/payments/fail`,
 			card: { flowMode: "DEFAULT" }
 		});
 	};
@@ -260,11 +313,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				? `${order.groups[0].groupName} 외 ${order.groups.length - 1}건`
 				: order.groups[0].groupName;
 
-			if (state.selectedMethod === "KAKAO_PAY") {
-				await payWithKakao(order.orderNumber);
-			} else {
-				await payWithToss(order.orderNumber, orderName, order.finalAmount);
-			}
+			await payWithToss(order.orderNumber, orderName, order.finalAmount);
 		} catch (error) {
 			if (error.code !== "USER_CANCEL") {
 				showFeedback(error.message, true);

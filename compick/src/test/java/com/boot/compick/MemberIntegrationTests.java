@@ -15,6 +15,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +26,12 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.boot.compick.member.entity.EmailVerification;
 import com.boot.compick.member.entity.Member;
 import com.boot.compick.member.entity.MemberStatus;
+import com.boot.compick.member.entity.VerificationPurpose;
 import com.boot.compick.member.repository.AddressRepository;
+import com.boot.compick.member.repository.EmailVerificationRepository;
 import com.boot.compick.member.repository.MemberRepository;
 import com.boot.compick.member.repository.SocialAccountRepository;
 import com.boot.compick.member.service.SocialAccountService;
@@ -53,11 +58,28 @@ class MemberIntegrationTests {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	@Autowired
+	private EmailVerificationRepository emailVerificationRepository;
+
 	@AfterEach
 	void cleanUp() {
 		addressRepository.deleteAll();
 		socialAccountRepository.deleteAll();
 		memberRepository.deleteAll();
+		emailVerificationRepository.deleteAll();
+	}
+
+	private void markEmailVerified(String email, VerificationPurpose purpose) {
+		LocalDateTime now = LocalDateTime.now();
+		EmailVerification verification = new EmailVerification(
+			email,
+			purpose,
+			passwordEncoder.encode("000000"),
+			now.plusMinutes(5),
+			now
+		);
+		verification.verify(now);
+		emailVerificationRepository.save(verification);
 	}
 
 	@Test
@@ -73,6 +95,8 @@ class MemberIntegrationTests {
 
 	@Test
 	void signupStoresBcryptPassword() throws Exception {
+		markEmailVerified("member@compick.test", VerificationPurpose.SIGN_UP);
+
 		mockMvc.perform(post("/members/signup")
 				.with(csrf())
 				.param("loginId", "compick01")

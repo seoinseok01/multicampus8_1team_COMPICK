@@ -8,6 +8,7 @@
 	<link rel="stylesheet" th:href="@{/css/member.css}">
 	<meta name="_csrf" th:content="${_csrf.token}">
 	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 	<script th:src="@{/js/address.js}" defer></script>
 </head>
 <body>
@@ -63,9 +64,12 @@
 				<label for="addressPhone">휴대전화 번호</label>
 				<input id="addressPhone" type="tel" required>
 				<label for="zipCode">우편번호</label>
-				<input id="zipCode" inputmode="numeric" maxlength="5" required>
+				<div class="field-with-button">
+					<input id="zipCode" inputmode="numeric" maxlength="5" required readonly>
+					<button type="button" data-address-search>주소 검색</button>
+				</div>
 				<label for="address1">기본 주소</label>
-				<input id="address1" maxlength="255" required>
+				<input id="address1" maxlength="255" required readonly>
 				<label for="address2">상세 주소</label>
 				<input id="address2" maxlength="255">
 				<label class="check-label">

@@ -55,6 +55,7 @@ public class SecurityConfig {
 					"/members/signup",
 					"/api/members/check-login-id",
 					"/api/members/check-email",
+					"/api/email-verifications/**",
 					"/login",
 					"/oauth2/**",
 					"/login/oauth2/**",
@@ -73,8 +74,7 @@ public class SecurityConfig {
 					"/payments/**",
 					"/api/cart/**",
 					"/api/orders/**",
-					"/api/addresses/**",
-					"/api/payments/**"
+					"/api/addresses/**"
 				).authenticated()
 				.anyRequest().permitAll()
 			)

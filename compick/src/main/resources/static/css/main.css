@@ -2373,40 +2373,6 @@ main {
 	text-decoration: underline;
 }
 
-.payment-method-group {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	margin: 16px 0;
-}
-
-.payment-method-button {
-	padding: 12px 14px;
-	border: 1px solid var(--color-border);
-	border-radius: 10px;
-	background: #fff;
-	color: var(--color-text);
-	font-weight: 600;
-	text-align: left;
-	cursor: pointer;
-}
-
-.payment-method-button:hover:not(:disabled) {
-	border-color: var(--color-primary);
-}
-
-.payment-method-button.is-active {
-	border-color: var(--color-primary);
-	background: var(--color-primary-soft);
-	color: var(--color-primary);
-}
-
-.payment-method-button:disabled {
-	color: var(--color-text-muted);
-	cursor: not-allowed;
-	opacity: 0.6;
-}
-
 .order-agree {
 	display: flex;
 	align-items: center;
@@ -2414,6 +2380,70 @@ main {
 	margin-bottom: 14px;
 	font-size: 13px;
 	color: var(--color-text-muted);
+}
+
+.address-box-actions {
+	display: flex;
+	gap: 16px;
+	margin-top: 12px;
+}
+
+/* 배송지 인라인 등록 폼 슬라이드다운 (jQuery slideDown 대체) */
+
+.address-form-slide {
+	max-height: 0;
+	overflow: hidden;
+	transition: max-height 0.3s ease;
+}
+
+.address-form-slide.is-open {
+	margin-top: 16px;
+}
+
+.address-inline-form {
+	padding: 20px;
+	border: 1px solid var(--color-border);
+	border-radius: 14px;
+	background: var(--color-surface);
+}
+
+.address-form-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px 14px;
+}
+
+.address-form-grid label {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 8px;
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.address-form-grid label em {
+	color: var(--color-primary);
+	font-style: normal;
+}
+
+.address-form-wide {
+	grid-column: 1 / -1;
+}
+
+.address-form-default {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 14px;
+	font-size: 13px;
+}
+
+.address-form-actions {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+	margin-top: 16px;
 }
 
 /* 결제 완료/실패 (payment/success, payment/fail) */

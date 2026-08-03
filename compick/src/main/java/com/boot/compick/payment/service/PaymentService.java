@@ -11,9 +11,6 @@ import com.boot.compick.order.entity.OrderGroupEntity;
 import com.boot.compick.order.entity.OrderGroupType;
 import com.boot.compick.order.entity.OrderStatus;
 import com.boot.compick.order.repository.OrderRepository;
-import com.boot.compick.payment.client.KakaoPayClient;
-import com.boot.compick.payment.dto.KakaoApproveResponse;
-import com.boot.compick.payment.dto.KakaoReadyResponse;
 import com.boot.compick.payment.entity.PaymentEntity;
 import com.boot.compick.payment.entity.PaymentMethod;
 import com.boot.compick.payment.entity.PaymentStatus;
@@ -27,26 +24,19 @@ public class PaymentService {
 
 	private final OrderRepository orderRepository;
 	private final PaymentRepository paymentRepository;
-	private final KakaoPayClient kakaoPayClient;
 	private final TossPaymentService tossPaymentService;
 	private final CartService cartService;
 
 	public PaymentService(
 		OrderRepository orderRepository,
 		PaymentRepository paymentRepository,
-		KakaoPayClient kakaoPayClient,
 		TossPaymentService tossPaymentService,
 		CartService cartService
 	) {
 		this.orderRepository = orderRepository;
 		this.paymentRepository = paymentRepository;
-		this.kakaoPayClient = kakaoPayClient;
 		this.tossPaymentService = tossPaymentService;
 		this.cartService = cartService;
-	}
-
-	public boolean isKakaoConfigured() {
-		return kakaoPayClient.isConfigured();
 	}
 
 	public boolean isTossConfigured() {
@@ -55,65 +45,6 @@ public class PaymentService {
 
 	public String tossClientKey() {
 		return tossPaymentService.clientKey();
-	}
-
-	@Transactional
-	public String readyKakao(String loginId, String orderNumber, Long memberId, String originUrl) {
-		OrderEntity order = requireOwnedPendingOrder(orderNumber, memberId);
-
-		KakaoReadyResponse ready = kakaoPayClient.ready(
-			orderNumber,
-			"member-" + memberId,
-			representativeItemName(order),
-			1,
-			order.getFinalAmount(),
-			originUrl + "/payments/kakao/approve?orderNumber=" + orderNumber,
-			originUrl + "/payments/kakao/cancel?orderNumber=" + orderNumber,
-			originUrl + "/payments/kakao/fail?orderNumber=" + orderNumber
-		);
-
-		paymentRepository.findByOrderId(order.getOrderId()).ifPresentOrElse(
-			existing -> existing.changeExternalTransactionId(ready.tid()),
-			() -> paymentRepository.save(PaymentEntity.createReady(
-				order.getOrderId(), PaymentMethod.KAKAO_PAY, order.getFinalAmount(), ready.tid()
-			))
-		);
-
-		return ready.nextRedirectPcUrl();
-	}
-
-	@Transactional
-	public void approveKakao(String loginId, String orderNumber, String pgToken, Long memberId) {
-		OrderEntity order = requireOwnedPendingOrder(orderNumber, memberId);
-		PaymentEntity payment = paymentRepository.findByOrderId(order.getOrderId())
-			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "결제 준비 정보를 찾을 수 없습니다."));
-
-		KakaoApproveResponse approved = kakaoPayClient.approve(
-			payment.getExternalTransactionId(),
-			orderNumber,
-			"member-" + memberId,
-			pgToken
-		);
-
-		if (approved.amount() == null || approved.amount().total() != order.getFinalAmount()) {
-			throw new ResponseStatusException(HttpStatus.CONFLICT, "결제 금액이 주문 금액과 일치하지 않습니다.");
-		}
-
-		payment.approve(approved.aid());
-		order.markPaid();
-		clearOrderedCartItems(loginId, order);
-	}
-
-	@Transactional
-	public void markKakaoNotApproved(String orderNumber, Long memberId, boolean cancelled) {
-		OrderEntity order = requireOwnedPendingOrder(orderNumber, memberId);
-		paymentRepository.findByOrderId(order.getOrderId()).ifPresent(payment -> {
-			if (cancelled) {
-				payment.cancel();
-			} else {
-				payment.fail();
-			}
-		});
 	}
 
 	@Transactional
@@ -142,11 +73,7 @@ public class PaymentService {
 		if (payment == null || payment.getPaymentStatus() != PaymentStatus.APPROVED) {
 			return;
 		}
-		if (payment.getPaymentMethod() == PaymentMethod.KAKAO_PAY) {
-			kakaoPayClient.cancel(payment.getExternalTransactionId(), payment.getPaymentAmount());
-		} else {
-			tossPaymentService.cancel(payment.getExternalTransactionId(), "고객 요청에 의한 주문 취소");
-		}
+		tossPaymentService.cancel(payment.getExternalTransactionId(), "고객 요청에 의한 주문 취소");
 		payment.cancel();
 	}
 
@@ -174,15 +101,6 @@ public class PaymentService {
 		} catch (ResponseStatusException ignored) {
 			// 위와 동일한 이유로 무시한다.
 		}
-	}
-
-	private String representativeItemName(OrderEntity order) {
-		if (order.getGroups().isEmpty()) {
-			return order.getOrderNumber();
-		}
-		String first = order.getGroups().get(0).getGroupName();
-		int others = order.getGroups().size() - 1;
-		return others > 0 ? first + " 외 " + others + "건" : first;
 	}
 
 	private OrderEntity requireOwnedPendingOrder(String orderNumber, Long memberId) {

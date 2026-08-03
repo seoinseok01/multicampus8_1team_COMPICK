@@ -5,13 +5,14 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>주문서 작성 | COMPICK</title>
 	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<link rel="stylesheet" th:href="@{/css/member.css}">
 	<meta name="_csrf" th:content="${_csrf.token}">
 	<meta name="_csrf_header" th:content="${_csrf.headerName}">
 	<script src="https://js.tosspayments.com/v2/standard"></script>
+	<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 	<script th:src="@{/js/order.js}" defer></script>
 </head>
 <body
-	th:data-kakao-configured="${kakaoConfigured}"
 	th:data-toss-configured="${tossConfigured}"
 	th:data-toss-client-key="${tossClientKey}"
 	th:data-customer-key="${customerKey}">
@@ -28,6 +29,50 @@
 				<div class="order-section">
 					<h2>배송지</h2>
 					<div data-address-box></div>
+
+					<div class="address-form-slide" data-address-form-slide>
+						<form class="address-inline-form" data-address-form>
+							<div class="address-form-grid">
+								<label>
+									배송지 이름
+									<input type="text" name="addressName" maxlength="50" placeholder="예: 우리 집">
+								</label>
+								<label>
+									받는 사람 <em>*</em>
+									<input type="text" name="recipientName" maxlength="50" required>
+								</label>
+								<label>
+									휴대전화 번호 <em>*</em>
+									<input type="tel" name="phone" placeholder="010-1234-5678" required>
+								</label>
+								<label>
+									우편번호 <em>*</em>
+									<div class="field-with-button">
+										<input type="text" name="zipCode" inputmode="numeric"
+											maxlength="5" required readonly>
+										<button type="button" data-address-search>주소 검색</button>
+									</div>
+								</label>
+								<label class="address-form-wide">
+									기본 주소 <em>*</em>
+									<input type="text" name="address1" maxlength="255" required readonly>
+								</label>
+								<label class="address-form-wide">
+									상세 주소
+									<input type="text" name="address2" maxlength="255">
+								</label>
+							</div>
+							<label class="address-form-default">
+								<input type="checkbox" name="isDefault">
+								기본 배송지로 설정
+							</label>
+							<p class="form-message" data-address-form-message role="status"></p>
+							<div class="address-form-actions">
+								<button type="button" class="secondary-button" data-address-form-cancel>취소</button>
+								<button type="submit" class="primary-button">배송지 저장</button>
+							</div>
+						</form>
+					</div>
 				</div>
 
 				<div class="order-section">
@@ -49,11 +94,6 @@
 				<div class="cart-total-row">
 					<span>총 결제 금액</span>
 					<strong data-total-amount>0원</strong>
-				</div>
-
-				<div class="payment-method-group" data-payment-methods>
-					<button type="button" class="payment-method-button" data-method="KAKAO_PAY">KakaoPay 카카오페이</button>
-					<button type="button" class="payment-method-button" data-method="TOSS">토스페이먼츠</button>
 				</div>
 
 				<label class="order-agree">

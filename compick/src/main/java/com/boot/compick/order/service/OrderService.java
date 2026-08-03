@@ -267,7 +267,6 @@ public class OrderService {
 
 	private String paymentMethodLabel(String method) {
 		return switch (method) {
-			case "KAKAO_PAY" -> "카카오페이";
 			case "TOSS" -> "토스페이먼츠";
 			default -> method;
 		};

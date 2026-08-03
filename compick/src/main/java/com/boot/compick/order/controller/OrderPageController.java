@@ -25,7 +25,6 @@ public class OrderPageController {
 
 	@GetMapping("/orders/new")
 	public String checkout(Principal principal, Model model) {
-		model.addAttribute("kakaoConfigured", paymentService.isKakaoConfigured());
 		model.addAttribute("tossConfigured", paymentService.isTossConfigured());
 		model.addAttribute("tossClientKey", paymentService.tossClientKey());
 		model.addAttribute("customerKey", customerKeyFor(principal.getName()));

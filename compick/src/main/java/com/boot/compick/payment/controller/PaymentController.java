@@ -25,55 +25,7 @@ public class PaymentController {
 		this.memberLookupRepository = memberLookupRepository;
 	}
 
-	@GetMapping("/payments/kakao/approve")
-	public String kakaoApprove(
-		@RequestParam String orderNumber,
-		@RequestParam("pg_token") String pgToken,
-		Principal principal,
-		Model model
-	) {
-		try {
-			Long memberId = memberLookupRepository.findActiveMemberIdByLoginId(principal.getName())
-				.orElseThrow();
-			paymentService.approveKakao(principal.getName(), orderNumber, pgToken, memberId);
-			model.addAttribute("orderNumber", orderNumber);
-			model.addAttribute("method", "카카오페이");
-			return "payment/success";
-		} catch (ResponseStatusException | java.util.NoSuchElementException exception) {
-			model.addAttribute("code", "PAYMENT_CONFIRM_FAILED");
-			model.addAttribute("message", messageOf(exception));
-			model.addAttribute("orderNumber", orderNumber);
-			return "payment/fail";
-		}
-	}
-
-	@GetMapping("/payments/kakao/cancel")
-	public String kakaoCancel(
-		@RequestParam String orderNumber,
-		Principal principal,
-		Model model
-	) {
-		markKakaoNotApproved(orderNumber, principal, true);
-		model.addAttribute("code", "PAYMENT_CANCELLED");
-		model.addAttribute("message", "결제를 취소했습니다.");
-		model.addAttribute("orderNumber", orderNumber);
-		return "payment/fail";
-	}
-
-	@GetMapping("/payments/kakao/fail")
-	public String kakaoFail(
-		@RequestParam String orderNumber,
-		Principal principal,
-		Model model
-	) {
-		markKakaoNotApproved(orderNumber, principal, false);
-		model.addAttribute("code", "PAYMENT_FAILED");
-		model.addAttribute("message", "결제가 완료되지 않았습니다.");
-		model.addAttribute("orderNumber", orderNumber);
-		return "payment/fail";
-	}
-
-	@GetMapping("/payments/toss/success")
+	@GetMapping("/payments/success")
 	public String tossSuccess(
 		@RequestParam String paymentKey,
 		@RequestParam String orderId,
@@ -96,7 +48,7 @@ public class PaymentController {
 		}
 	}
 
-	@GetMapping("/payments/toss/fail")
+	@GetMapping("/payments/fail")
 	public String tossFail(
 		@RequestParam(defaultValue = "PAYMENT_FAILED") String code,
 		@RequestParam(defaultValue = "결제가 완료되지 않았습니다.") String message,
@@ -107,16 +59,6 @@ public class PaymentController {
 		model.addAttribute("message", message);
 		model.addAttribute("orderNumber", orderId);
 		return "payment/fail";
-	}
-
-	private void markKakaoNotApproved(String orderNumber, Principal principal, boolean cancelled) {
-		try {
-			Long memberId = memberLookupRepository.findActiveMemberIdByLoginId(principal.getName())
-				.orElseThrow();
-			paymentService.markKakaoNotApproved(orderNumber, memberId, cancelled);
-		} catch (RuntimeException ignored) {
-			// 이미 처리된 주문이거나 존재하지 않으면 실패 화면만 보여주고 넘어간다.
-		}
 	}
 
 	private String messageOf(Exception exception) {

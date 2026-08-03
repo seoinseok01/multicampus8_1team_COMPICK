@@ -63,6 +63,16 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	});
 
+	document.querySelector("[data-address-search]")?.addEventListener("click", () => {
+		new daum.Postcode({
+			oncomplete: data => {
+				document.querySelector("#zipCode").value = data.zonecode;
+				document.querySelector("#address1").value = data.roadAddress || data.jibunAddress;
+				document.querySelector("#address2").focus();
+			}
+		}).open();
+	});
+
 	form.addEventListener("reset", () => {
 		addressId.value = "";
 		document.querySelector("#address-form-title").textContent = "배송지 등록";

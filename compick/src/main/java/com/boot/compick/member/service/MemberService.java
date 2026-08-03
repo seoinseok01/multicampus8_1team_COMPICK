@@ -11,6 +11,7 @@ import com.boot.compick.member.dto.ProfileForm;
 import com.boot.compick.member.dto.SignupForm;
 import com.boot.compick.member.entity.Member;
 import com.boot.compick.member.entity.MemberStatus;
+import com.boot.compick.member.entity.VerificationPurpose;
 import com.boot.compick.member.repository.MemberRepository;
 import com.boot.compick.member.repository.SocialAccountRepository;
 
@@ -21,15 +22,18 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final SocialAccountRepository socialAccountRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final EmailVerificationService emailVerificationService;
 
 	public MemberService(
 		MemberRepository memberRepository,
 		SocialAccountRepository socialAccountRepository,
-		PasswordEncoder passwordEncoder
+		PasswordEncoder passwordEncoder,
+		EmailVerificationService emailVerificationService
 	) {
 		this.memberRepository = memberRepository;
 		this.socialAccountRepository = socialAccountRepository;
 		this.passwordEncoder = passwordEncoder;
+		this.emailVerificationService = emailVerificationService;
 	}
 
 	@Transactional
@@ -46,6 +50,7 @@ public class MemberService {
 		if (!form.getPassword().equals(form.getPasswordConfirm())) {
 			throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
 		}
+		emailVerificationService.consumeVerified(email, VerificationPurpose.SIGN_UP);
 
 		memberRepository.save(new Member(
 			loginId,
