@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>로그인 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<link rel="stylesheet" th:href="@{/css/member.css}">
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="member-page">
+		<section class="member-card" aria-labelledby="login-title">
+			<h1 id="login-title">로그인</h1>
+			<p>COMPICK 계정으로 로그인하세요.</p>
+			<p class="form-message success" th:if="${message}" th:text="${message}"></p>
+			<p class="form-message" th:if="${googleConnectionRemoved}">
+				COMPICK에 저장된 Google 연결 정보도 삭제했습니다.
+				Google 계정 자체의 연결은 Google 계정 관리에서 해제할 수 있습니다.
+			</p>
+			<p class="form-message error" th:if="${param.error}">
+				아이디 또는 비밀번호를 확인해 주세요.
+			</p>
+			<p class="form-message error" th:if="${param.oauthError}">
+				Google 로그인에 실패했습니다. 다시 시도해 주세요.
+			</p>
+			<p class="form-message success" th:if="${param.logout}">
+				로그아웃되었습니다.
+			</p>
+
+			<form class="member-form" th:action="@{/login}" method="post">
+				<label for="username">아이디</label>
+				<input id="username" name="username" type="text" required autofocus>
+
+				<label for="password">비밀번호</label>
+				<input id="password" name="password" type="password" required>
+
+				<label class="check-label">
+					<input name="remember-me" type="checkbox">
+					로그인 정보 저장
+				</label>
+
+				<button class="primary-button" type="submit">로그인</button>
+			</form>
+
+			<div class="social-login" th:if="${googleLoginEnabled}">
+				<span>또는</span>
+				<a class="google-button"
+					th:href="@{/oauth2/authorization/google}">
+					<b aria-hidden="true">G</b>
+					Google로 계속하기
+				</a>
+			</div>
+
+			<p class="member-link">
+				아직 회원이 아니신가요?
+				<a th:href="@{/members/signup}">회원가입</a>
+			</p>
+		</section>
+	</main>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

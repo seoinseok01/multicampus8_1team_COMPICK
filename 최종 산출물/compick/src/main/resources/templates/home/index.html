@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko"
+	xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>COMPICK | 나에게 맞는 PC 견적</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script th:src="@{/js/home.js}" defer></script>
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+
+	<main>
+		<section class="home-intro" aria-labelledby="home-title">
+			<p>COMPICK</p>
+			<h1 id="home-title">내게 맞는 PC를 더 쉽게</h1>
+			<p>부품을 직접 고르거나, 완성 견적과 AI 추천으로 시작하세요.</p>
+		</section>
+
+		<section class="home-hero" aria-labelledby="hero-title">
+			<h2 id="hero-title">예산과 용도에 맞는<br>나만의 PC 견적</h2>
+			<p>호환성 검사를 받으며 안전하게 구성할 수 있습니다.</p>
+
+			<div class="hero-actions">
+				<a th:href="@{/ai-quotes}">AI로 견적 추천받기</a>
+				<a th:href="@{/quotes/new}">직접 견적 만들기</a>
+			</div>
+
+			<a class="recommendation-link" th:href="@{/preset}">
+				직접 고르기 어렵다면 추천 견적 둘러보기 &rarr;
+			</a>
+		</section>
+
+		<section class="quick-start" aria-labelledby="quick-start-title">
+			<h2 id="quick-start-title">빠른 시작</h2>
+
+			<ul class="quick-start-list">
+				<li>
+					<a th:href="@{/products}">
+						<img class="quick-start-icon"
+							th:src="@{/images/icons/parts-shopping.svg}"
+							alt="" aria-hidden="true" width="44" height="44">
+						<h3>부품 쇼핑</h3>
+						<p>CPU부터 케이스까지 개별 구매</p>
+					</a>
+				</li>
+				<li>
+					<a th:href="@{/quotes/new}">
+						<img class="quick-start-icon"
+							th:src="@{/images/icons/quote-shopping.svg}"
+							alt="" aria-hidden="true" width="44" height="44">
+						<h3>견적 쇼핑</h3>
+						<p>호환성을 확인하며 직접 구성</p>
+					</a>
+				</li>
+				<li>
+					<a th:href="@{/preset}">
+						<img class="quick-start-icon"
+							th:src="@{/images/icons/preset-recommendation.svg}"
+							alt="" aria-hidden="true" width="44" height="44">
+						<h3>추천 견적</h3>
+						<p>용도별 완성 견적 선택</p>
+					</a>
+				</li>
+				<li>
+					<a th:href="@{/ai-quotes}">
+						<img class="quick-start-icon"
+							th:src="@{/images/icons/ai-recommendation.svg}"
+							alt="" aria-hidden="true" width="44" height="44">
+						<h3>AI 견적</h3>
+						<p>자연어로 예산과 용도 입력</p>
+					</a>
+				</li>
+			</ul>
+		</section>
+
+		<section class="popular-products" aria-labelledby="popular-products-title">
+			<h2 id="popular-products-title">인기 부품</h2>
+
+			<ul class="product-list" th:if="${!#lists.isEmpty(popularProducts)}">
+				<li class="product-card" th:each="product : ${popularProducts}">
+					<a
+						class="product-detail-trigger"
+						th:href="@{/products/{id}(id=${product.productId})}"
+						th:data-product-id="${product.productId}"
+						th:data-product-category="${product.category}"
+						th:data-product-brand="${product.brand}"
+						th:data-product-name="${product.name}"
+						th:data-product-price="${product.price}"
+						th:data-product-stock="${product.stockQuantity}"
+						th:data-product-description="${product.description}"
+						th:data-spec-label-1="${product.specLabel1}"
+						th:data-spec-value-1="${product.specValue1}"
+						th:data-spec-label-2="${product.specLabel2}"
+						th:data-spec-value-2="${product.specValue2}"
+						th:data-spec-label-3="${product.specLabel3}"
+						th:data-spec-value-3="${product.specValue3}"
+						th:data-spec-label-4="${product.specLabel4}"
+						th:data-spec-value-4="${product.specValue4}">
+						<img
+							class="product-image"
+							th:src="${product.imageUrl != null and !#strings.isEmpty(product.imageUrl)
+								? product.imageUrl
+								: '/images/products/product-placeholder.svg'}"
+							th:alt="|${product.name} 상품 이미지|"
+							th:data-fallback-src="@{/images/products/product-placeholder.svg}"
+							loading="lazy"
+							decoding="async"
+							referrerpolicy="no-referrer"
+							width="212"
+							height="132">
+						<p th:text="${product.brand}">제조사</p>
+						<h3 th:text="${product.name}">상품명</h3>
+					</a>
+
+					<p>
+						<strong th:text="|${#numbers.formatInteger(product.price, 0, 'COMMA')}원|">
+							0원
+						</strong>
+					</p>
+
+					<button
+						type="button"
+						class="add-cart-button"
+						th:data-product-id="${product.productId}">
+						담기
+					</button>
+				</li>
+			</ul>
+
+			<p class="empty-products" th:if="${#lists.isEmpty(popularProducts)}">
+				인기 상품을 준비 중입니다.
+			</p>
+		</section>
+	</main>
+
+	<dialog
+		id="product-detail-dialog"
+		class="product-detail-dialog"
+		aria-labelledby="product-dialog-name">
+		<button
+			type="button"
+			class="dialog-close-button"
+			aria-label="상품 상세 팝업 닫기">
+			&times;
+		</button>
+
+		<div class="product-dialog-layout">
+			<div class="product-dialog-visual">
+				<span class="product-category-badge" data-dialog-category>CPU</span>
+			</div>
+
+			<div class="product-dialog-information">
+				<p class="product-dialog-brand" data-dialog-brand>AMD</p>
+				<h2 id="product-dialog-name" data-dialog-name>Ryzen 7 7800X3D</h2>
+				<p class="product-dialog-description" data-dialog-description>
+					게이밍에 최적화된 8코어 데스크톱 프로세서
+				</p>
+
+				<div class="product-dialog-price-row">
+					<strong data-dialog-price>612,000원</strong>
+					<span class="product-stock-status" data-dialog-stock>재고 있음</span>
+				</div>
+
+				<section class="product-specifications" aria-labelledby="product-spec-title">
+					<h3 id="product-spec-title">주요 사양</h3>
+					<dl>
+						<div>
+							<dt data-dialog-spec-label="1">소켓</dt>
+							<dd data-dialog-spec-value="1">AM5</dd>
+						</div>
+						<div>
+							<dt data-dialog-spec-label="2">코어 / 스레드</dt>
+							<dd data-dialog-spec-value="2">8 / 16</dd>
+						</div>
+						<div>
+							<dt data-dialog-spec-label="3">기본 소비전력</dt>
+							<dd data-dialog-spec-value="3">120 W</dd>
+						</div>
+						<div>
+							<dt data-dialog-spec-label="4">내장 그래픽</dt>
+							<dd data-dialog-spec-value="4">지원</dd>
+						</div>
+					</dl>
+				</section>
+
+				<div class="product-dialog-actions">
+					<button type="button" class="dialog-add-cart-button">장바구니 담기</button>
+					<a class="dialog-add-quote-link" href="/quotes/new">견적에 담기</a>
+				</div>
+			</div>
+
+			<section class="product-dialog-detail" aria-labelledby="product-detail-title">
+				<h3 id="product-detail-title">상세 설명</h3>
+				<p data-dialog-detail>상품 상세 사양과 호환성 데이터를 표시합니다.</p>
+			</section>
+		</div>
+	</dialog>
+
+	<p id="cart-feedback" class="cart-feedback" role="status" aria-live="polite" hidden></p>
+
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

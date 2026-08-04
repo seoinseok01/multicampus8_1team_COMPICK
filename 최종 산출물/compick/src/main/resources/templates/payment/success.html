@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>주문 완료 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="payment-result">
+		<section>
+			<div class="result-icon success">&#10003;</div>
+			<p class="result-label">ORDER COMPLETE</p>
+			<h1>주문이 완료되었습니다</h1>
+			<p th:text="|주문번호 ${orderNumber}|">주문번호 CP20260716001</p>
+			<dl>
+				<div>
+					<dt>결제 수단</dt>
+					<dd th:text="${method}">카카오페이</dd>
+				</div>
+				<div>
+					<dt>주문 상태</dt>
+					<dd>결제 완료</dd>
+				</div>
+			</dl>
+			<div class="result-actions">
+				<a th:href="@{/orders/{orderNumber}(orderNumber=${orderNumber})}" class="primary">주문 내역 보기</a>
+				<a th:href="@{/products}">쇼핑 계속하기</a>
+			</div>
+		</section>
+	</main>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>
