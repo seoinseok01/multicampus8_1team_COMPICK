@@ -157,7 +157,7 @@ public class MemberController {
             return "member/profile";
         }
         redirectAttributes.addFlashAttribute("message", "회원정보를 수정했습니다.");
-        return "redirect:/mypage/profile";
+        return "redirect:/mypage";
     }
 
     @PostMapping("/mypage/password")

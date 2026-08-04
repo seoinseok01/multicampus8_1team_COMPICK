@@ -64,7 +64,7 @@ public class AiQuoteParser {
         return field;
     }
 
-    private List<List<String>> parseRows(String csv) {
+    public List<List<String>> parseRows(String csv) {
         List<List<String>> rows = new ArrayList<>();
         List<String> row = new ArrayList<>();
         StringBuilder field = new StringBuilder();

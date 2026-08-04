@@ -16,6 +16,8 @@ import com.boot.compick.member.service.AddressService;
 import com.boot.compick.member.service.MemberService;
 import com.boot.compick.member.dto.AddressForm;
 import com.boot.compick.cart.service.CartQuoteService;
+import com.boot.compick.cart.service.CartService;
+import com.boot.compick.cart.dto.AddCartProductRequest;
 import com.boot.compick.order.dto.CheckoutItem;
 import com.boot.compick.order.dto.CheckoutQuote;
 import com.boot.compick.order.dto.CheckoutView;
@@ -41,6 +43,7 @@ public class OrderService {
 	private final OrderGroupRepository groupRepository;
 	private final OrderItemRepository itemRepository;
 	private final CartQuoteService cartQuoteService;
+	private final CartService cartService;
 
 	@Transactional
 	public OrderEntity create(String loginId, CreateOrderRequest request) {
@@ -67,6 +70,7 @@ public class OrderService {
 				.toList());
 		}
 		cartQuoteService.removeSelected(member.getId());
+		cartService.removeSelected(member.getId());
 		return order;
 	}
 
@@ -106,6 +110,10 @@ public class OrderService {
 		groupRepository.findAllByOrderIdOrderById(order.getId()).stream()
 			.filter(group -> "QUOTE".equals(group.getGroupType()) && group.getSourceQuoteId() != null)
 			.forEach(group -> cartQuoteService.add(loginId, group.getSourceQuoteId()));
+		itemRepository.findAllByOrderIdOrderById(order.getId()).stream()
+			.filter(item -> "PRODUCT".equals(item.getGroup().getGroupType()))
+			.forEach(item -> cartService.addProduct(loginId,
+				new AddCartProductRequest(item.getProductId(), item.getQuantity())));
 		itemRepository.deleteAllByOrderId(order.getId());
 		groupRepository.deleteAllByOrderId(order.getId());
 		orderRepository.delete(order);

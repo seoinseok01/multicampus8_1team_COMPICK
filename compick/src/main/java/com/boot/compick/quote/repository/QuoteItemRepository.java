@@ -7,6 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.boot.compick.quote.entity.QuoteItemEntity;
 
 public interface QuoteItemRepository extends JpaRepository<QuoteItemEntity, Long> {
-    @EntityGraph(attributePaths = "product")
-    List<QuoteItemEntity> findAllByQuoteIdInOrderById(Collection<Long> quoteIds);
+    List<QuoteItemEntity> findAllByQuoteQuoteIdInOrderByQuoteItemId(Collection<Long> quoteIds);
 }

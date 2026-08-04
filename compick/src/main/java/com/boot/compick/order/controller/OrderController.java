@@ -53,7 +53,7 @@ public class OrderController {
 		try {
 			String orderNumber = orderService.create(principal.getName(), request).getOrderNumber();
 			redirect.addFlashAttribute("message", "주문이 생성되었습니다. 결제를 진행해 주세요.");
-			return "redirect:/orders";
+			return "redirect:/orders/" + orderNumber + "/payment";
 		} catch (IllegalArgumentException e) {
 			redirect.addFlashAttribute("error", e.getMessage());
 			return "redirect:/orders/new";

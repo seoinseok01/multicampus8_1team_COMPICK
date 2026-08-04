@@ -7,6 +7,7 @@ public record CartQuoteView(
         Long cartItemId,
         Long quoteId,
         String name,
+        String typeLabel,
         int quantity,
         boolean selected,
         List<CheckoutItem> items,

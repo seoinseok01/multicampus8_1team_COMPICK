@@ -113,7 +113,10 @@
                     <p class="compatibility-message">✓ 호환성 검사 통과</p>
                     <p class="result-warning" th:if="${recommendation.warning()}" th:text="${recommendation.warning()}"></p>
                     <div class="total-price"><b>총금액</b><strong th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA') + '원'}">0원</strong></div>
-                    <button type="button" class="integration-button secondary">견적 쇼핑에서 수정</button>
+                    <a th:if="${quoteId}" class="integration-button secondary"
+                       th:href="@{/quotes/new(basedOn=${quoteId})}">견적 쇼핑에서 수정</a>
+                    <a th:unless="${quoteId}" class="integration-button secondary"
+                       th:href="@{/login}">로그인 후 견적 수정</a>
                     <form th:if="${quoteId}" th:action="@{/cart/quotes}" method="post">
                         <input type="hidden" name="quoteId" th:value="${quoteId}">
                         <button type="submit" class="integration-button primary">장바구니 담기</button>

@@ -33,6 +33,9 @@ public class Member {
     private String email;
 
     @Column(nullable = false, length = 20)
+    private String nickname;
+
+    @Column(nullable = false, length = 20)
     private String phone;
 
     @Enumerated(EnumType.STRING)
@@ -56,6 +59,7 @@ public class Member {
         this.passwordHash = passwordHash;
         this.name = name;
         this.email = email;
+        this.nickname = name.length() > 20 ? name.substring(0, 20) : name;
         this.phone = phone;
     }
 

@@ -55,7 +55,7 @@ public class CartProductItemEntity {
 		this.cart = cart;
 		this.productId = productId;
 		this.quantity = quantity;
-		this.selected = "Y";
+		this.selected = "N";
 	}
 
 	public static CartProductItemEntity create(
@@ -85,4 +85,6 @@ public class CartProductItemEntity {
 	public boolean isSelected() {
 		return "Y".equals(selected);
 	}
+
+	public void select(boolean selected) { this.selected = selected ? "Y" : "N"; }
 }

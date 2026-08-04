@@ -2,37 +2,40 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="_csrf" th:content="${_csrf.token}"><meta name="_csrf_parameter" th:content="${_csrf.parameterName}">
     <title>장바구니 | COMPICK</title>
     <link rel="stylesheet" th:href="@{/css/main.css}"><link rel="stylesheet" th:href="@{/css/checkout.css}"><link rel="stylesheet" th:href="@{/css/quote-checkout.css}">
 </head>
 <body>
 <div th:replace="~{fragments/header :: siteHeader}"></div>
 <main class="checkout-page">
-    <header class="page-title"><p>SHOPPING CART</p><h1>장바구니</h1><span>결제할 견적서를 선택해 주세요.</span></header>
+    <header class="page-title"><p>SHOPPING CART</p><h1>장바구니</h1><span>결제할 상품과 견적서를 선택해 주세요.</span></header>
     <p class="alert success" th:if="${message}" th:text="${message}"></p>
     <p class="alert" th:if="${error}" th:text="${error}"></p>
     <section class="panel" th:if="${cart.empty}"><div class="empty"><h2>장바구니가 비어있습니다.</h2><p>상품을 먼저 담아주세요.</p></div></section>
     <form th:unless="${cart.empty}" th:action="@{/cart/quotes/selection}" method="post" class="checkout-grid">
-        <section class="panel"><h2>담은 견적서</h2>
+        <div><section class="panel" th:if="${!#lists.isEmpty(cart.products)}"><h2>담은 상품</h2>
+            <label class="product-select" th:each="product:${cart.products}"><input type="checkbox" name="productItemIds" th:value="${product.cartItemId}" th:checked="${product.selected}" th:attr="data-amount=${product.lineAmount}"><article class="product-row"><img th:src="${product.imageUrl != null and !product.imageUrl.isBlank()} ? ${product.imageUrl} : @{/images/products/product-placeholder.svg}" alt=""><div><small th:text="${product.brand}">브랜드</small><strong th:text="${product.name}">상품명</strong><span th:text="|수량 ${product.quantity}개|">수량</span></div><b th:text="|${#numbers.formatInteger(product.lineAmount,0,'COMMA')}원|">0원</b><button type="button" class="cart-item-delete" th:attr="data-delete-url=@{/cart/products/{id}/delete(id=${product.cartItemId})},aria-label=|${product.name} 삭제|">삭제</button></article></label>
+        </section><section class="panel" th:if="${!#lists.isEmpty(cart.quotes)}"><h2>담은 견적서</h2>
             <label class="quote-select" th:each="quote:${cart.quotes}">
-                <input type="checkbox" name="cartItemIds" th:value="${quote.cartItemId}" th:checked="${quote.selected}" th:attr="data-amount=${quote.lineAmount}">
+                <input type="checkbox" name="quoteItemIds" th:value="${quote.cartItemId}" th:checked="${quote.selected}" th:attr="data-amount=${quote.lineAmount}">
                 <article class="quote-card">
-                    <header><div><span>AI 견적</span><strong th:text="${quote.name}">견적서</strong></div><b th:text="|${#numbers.formatInteger(quote.lineAmount,0,'COMMA')}원|">0원</b></header>
+                    <header><div><span th:text="${quote.typeLabel}">견적서</span><strong th:text="${quote.name}">견적서</strong></div><b th:text="|${#numbers.formatInteger(quote.lineAmount,0,'COMMA')}원|">0원</b><button type="button" class="cart-item-delete" th:attr="data-delete-url=@{/cart/quotes/{id}/delete(id=${quote.cartItemId})},aria-label=|${quote.name} 삭제|">삭제</button></header>
                     <div class="quote-component" th:each="item:${quote.items}"><span th:text="${item.name}">구성품</span><small th:text="|${#numbers.formatInteger(item.price,0,'COMMA')}원 · ${item.quantity}개|">가격</small></div>
                     <footer th:text="|견적서 수량 ${quote.quantity}개 · 구성품 ${#lists.size(quote.items)}종|">견적 정보</footer>
                 </article>
             </label>
-        </section>
-        <aside class="panel summary"><h2>선택 결제 금액</h2><dl><div><dt>선택한 견적서</dt><dd>결제 대상</dd></div><div><dt>배송비</dt><dd>무료</dd></div></dl>
+        </section></div>
+        <aside class="panel summary"><h2>선택 결제 금액</h2><dl><div><dt>선택 항목</dt><dd>결제 대상</dd></div><div><dt>배송비</dt><dd>무료</dd></div></dl>
             <div class="total"><span>총 결제 금액</span><strong id="selected-total" th:text="|${#numbers.formatInteger(cart.selectedAmount,0,'COMMA')}원|">0원</strong></div>
-            <button id="order-selected" class="primary full" type="submit" name="order" value="true">선택한 견적서 주문하기</button>
-            <button class="selection-save" type="submit">선택만 저장</button>
+            <button id="order-selected" class="primary full" type="submit" name="order" value="true">선택 항목 주문하기</button>
+            <button class="selection-delete" type="submit" th:formaction="@{/cart/items/delete}" onclick="return confirm('선택한 상품과 견적서를 장바구니에서 삭제할까요?')">선택 삭제</button>
         </aside>
     </form>
 </main>
 <div th:replace="~{fragments/footer :: siteFooter}"></div>
 <script>
-    const quoteChecks = [...document.querySelectorAll('input[name="cartItemIds"]')];
+    const quoteChecks = [...document.querySelectorAll('input[data-amount]')];
     const total = document.getElementById('selected-total');
     const orderButton = document.getElementById('order-selected');
     function updateSelection() {
@@ -42,6 +45,21 @@
         orderButton.disabled = selected.length === 0;
     }
     quoteChecks.forEach(check => check.addEventListener('change', updateSelection));
+    document.querySelectorAll('[data-delete-url]').forEach(button => button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!confirm('이 항목을 장바구니에서 삭제할까요?')) return;
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = button.dataset.deleteUrl;
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = document.querySelector('meta[name="_csrf_parameter"]').content;
+        csrf.value = document.querySelector('meta[name="_csrf"]').content;
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    }));
     updateSelection();
 </script>
 </body>

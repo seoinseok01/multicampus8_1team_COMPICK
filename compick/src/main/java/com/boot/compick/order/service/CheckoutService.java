@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.boot.compick.cart.entity.CartEntity;
 import com.boot.compick.cart.dto.CartQuoteView;
+import com.boot.compick.cart.dto.CartProductView;
 import com.boot.compick.cart.dto.CartView;
 import com.boot.compick.cart.repository.CartProductItemRepository;
 import com.boot.compick.cart.repository.CartQuoteItemRepository;
@@ -47,16 +48,21 @@ public class CheckoutService {
 
 		var cartQuotes = cartQuoteItemRepository
 			.findAllByCartCartIdAndSelectedOrderById(cart.getCartId(), "Y");
-		var quoteItems = quoteItemRepository.findAllByQuoteIdInOrderById(
+		var quoteItems = quoteItemRepository.findAllByQuoteQuoteIdInOrderByQuoteItemId(
 			cartQuotes.stream().map(item -> item.getQuote().getId()).toList());
+		productRepository.findAllById(quoteItems.stream().map(item -> item.getProductId()).toList())
+			.forEach(product -> products.put(product.getProductId(), product));
 		Map<Long, List<com.boot.compick.quote.entity.QuoteItemEntity>> itemsByQuote =
 			quoteItems.stream().collect(java.util.stream.Collectors.groupingBy(
 				item -> item.getQuote().getId(), LinkedHashMap::new, java.util.stream.Collectors.toList()));
 		List<CheckoutQuote> quotes = cartQuotes.stream().map(cartQuote -> {
 			var components = itemsByQuote.getOrDefault(cartQuote.getQuote().getId(), List.of()).stream()
-				.map(item -> new CheckoutItem(item.getProduct().getProductId(), item.getProduct().getProductName(),
-					item.getProduct().getBrand(), item.getProduct().getImageUrl(), item.getProduct().getPrice(),
-					item.getQuantity(), item.getProduct().getPrice() * item.getQuantity()))
+				.map(item -> {
+					ProductEntity product = products.get(item.getProductId());
+					return product == null ? null : new CheckoutItem(product.getProductId(), product.getProductName(),
+						product.getBrand(), product.getImageUrl(), product.getPrice(), item.getQuantity(),
+						product.getPrice() * item.getQuantity());
+				}).filter(Objects::nonNull)
 				.toList();
 			long unitAmount = components.stream().mapToLong(CheckoutItem::lineAmount).sum();
 			return new CheckoutQuote(cartQuote.getQuote().getId(), cartQuote.getQuote().getName(),
@@ -71,24 +77,49 @@ public class CheckoutService {
 	public CartView getCart(String loginId) {
 		Long memberId = memberService.findActiveByLoginId(loginId).getId();
 		CartEntity cart = cartRepository.findByMemberId(memberId).orElse(null);
-		if (cart == null) return new CartView(List.of(), 0);
+		if (cart == null) return new CartView(List.of(), List.of(), 0);
+		Map<Long, ProductEntity> products = new HashMap<>();
+		var cartProducts = itemRepository.findAllByCartCartIdOrderByCartProductItemId(cart.getCartId());
+		productRepository.findAllById(cartProducts.stream().map(item -> item.getProductId()).toList())
+			.forEach(product -> products.put(product.getProductId(), product));
+		List<CartProductView> productViews = cartProducts.stream().map(item -> {
+			ProductEntity product = products.get(item.getProductId());
+			return product == null ? null : new CartProductView(item.getCartProductItemId(), product.getProductId(),
+				product.getProductName(), product.getBrand(), product.getImageUrl(), product.getPrice(),
+				item.getQuantity(), item.isSelected(), product.getPrice() * item.getQuantity());
+		}).filter(Objects::nonNull).toList();
 		var cartQuotes = cartQuoteItemRepository.findAllByCartCartIdOrderById(cart.getCartId());
-		var quoteItems = quoteItemRepository.findAllByQuoteIdInOrderById(
+		var quoteItems = quoteItemRepository.findAllByQuoteQuoteIdInOrderByQuoteItemId(
 			cartQuotes.stream().map(item -> item.getQuote().getId()).toList());
+		productRepository.findAllById(quoteItems.stream().map(item -> item.getProductId()).toList())
+			.forEach(product -> products.put(product.getProductId(), product));
 		Map<Long, List<com.boot.compick.quote.entity.QuoteItemEntity>> itemsByQuote =
 			quoteItems.stream().collect(java.util.stream.Collectors.groupingBy(
 				item -> item.getQuote().getId(), LinkedHashMap::new, java.util.stream.Collectors.toList()));
 		List<CartQuoteView> quotes = cartQuotes.stream().map(cartQuote -> {
 			var components = itemsByQuote.getOrDefault(cartQuote.getQuote().getId(), List.of()).stream()
-				.map(item -> new CheckoutItem(item.getProduct().getProductId(), item.getProduct().getProductName(),
-					item.getProduct().getBrand(), item.getProduct().getImageUrl(), item.getProduct().getPrice(),
-					item.getQuantity(), item.getProduct().getPrice() * item.getQuantity()))
+				.map(item -> {
+					ProductEntity product = products.get(item.getProductId());
+					return product == null ? null : new CheckoutItem(product.getProductId(), product.getProductName(),
+						product.getBrand(), product.getImageUrl(), product.getPrice(), item.getQuantity(),
+						product.getPrice() * item.getQuantity());
+				}).filter(Objects::nonNull)
 				.toList();
 			long amount = components.stream().mapToLong(CheckoutItem::lineAmount).sum() * cartQuote.getQuantity();
 			return new CartQuoteView(cartQuote.getId(), cartQuote.getQuote().getId(), cartQuote.getQuote().getName(),
-				cartQuote.getQuantity(), cartQuote.isSelected(), components, amount);
+				quoteTypeLabel(cartQuote.getQuote().getQuoteType()), cartQuote.getQuantity(),
+				cartQuote.isSelected(), components, amount);
 		}).toList();
-		long selectedAmount = quotes.stream().filter(CartQuoteView::selected).mapToLong(CartQuoteView::lineAmount).sum();
-		return new CartView(quotes, selectedAmount);
+		long selectedAmount = productViews.stream().filter(CartProductView::selected).mapToLong(CartProductView::lineAmount).sum()
+			+ quotes.stream().filter(CartQuoteView::selected).mapToLong(CartQuoteView::lineAmount).sum();
+		return new CartView(productViews, quotes, selectedAmount);
+	}
+
+	private String quoteTypeLabel(com.boot.compick.quote.entity.QuoteType quoteType) {
+		return switch (quoteType) {
+			case USER -> "견적서";
+			case PRESET -> "추천 견적";
+			case AI -> "AI 견적";
+		};
 	}
 }

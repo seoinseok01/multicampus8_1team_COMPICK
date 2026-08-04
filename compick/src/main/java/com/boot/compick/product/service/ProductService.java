@@ -1,13 +1,22 @@
 package com.boot.compick.product.service;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.boot.compick.product.dto.PopularProductResponse;
+import com.boot.compick.product.dto.ProductFacetResponse;
+import com.boot.compick.product.dto.ProductListItemResponse;
 import com.boot.compick.product.entity.ProductEntity;
 import com.boot.compick.product.repository.ProductRepository;
+import com.boot.compick.product.repository.ProductSpecFacetRepository;
+import com.boot.compick.product.repository.ProductSpecifications;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,15 +27,86 @@ public class ProductService {
 	private static final String ON_SALE = "ON_SALE";
 	private static final int POPULAR_PRODUCT_LIMIT = 4;
 
+	private static final Map<String, List<String>> CATEGORY_SPEC_FACETS = Map.of(
+		"CPU", List.of("Socket", "Core Count"),
+		"MAINBOARD", List.of("Socket", "Memory Type", "Form Factor"),
+		"GPU", List.of("Chipset", "Memory"),
+		"RAM", List.of("Speed"),
+		"STORAGE", List.of("Form Factor", "Type"),
+		"CASE", List.of("Form Factor"),
+		"POWER_SUPPLY", List.of("Wattage", "Efficiency"),
+		"CPU_COOLER", List.of("Type")
+	);
+
 	private final ProductRepository productRepository;
+	private final ProductSpecFacetRepository specFacetRepository;
 	private final ObjectMapper objectMapper;
 
 	public ProductService(
 		ProductRepository productRepository,
+		ProductSpecFacetRepository specFacetRepository,
 		ObjectMapper objectMapper
 	) {
 		this.productRepository = productRepository;
+		this.specFacetRepository = specFacetRepository;
 		this.objectMapper = objectMapper;
+	}
+
+	public Page<ProductListItemResponse> listProducts(
+		String category,
+		List<String> brands,
+		Long minPrice,
+		Long maxPrice,
+		String keyword,
+		String storageType,
+		Map<String, String> specFilters,
+		Pageable pageable
+	) {
+		Specification<ProductEntity> spec = Specification
+			.where(ProductSpecifications.onSale())
+			.and(ProductSpecifications.categoryIs(category));
+
+		if (brands != null && !brands.isEmpty()) {
+			spec = spec.and(ProductSpecifications.brandIn(brands));
+		}
+		if (minPrice != null) {
+			spec = spec.and(ProductSpecifications.priceGreaterThanOrEqual(minPrice));
+		}
+		if (maxPrice != null) {
+			spec = spec.and(ProductSpecifications.priceLessThanOrEqual(maxPrice));
+		}
+		if (keyword != null && !keyword.isBlank()) {
+			spec = spec.and(ProductSpecifications.keywordMatches(keyword));
+		}
+		if (storageType != null && !storageType.isBlank()) {
+			spec = spec.and(ProductSpecifications.storageTypeIs(storageType));
+		}
+		if (specFilters != null && !specFilters.isEmpty()) {
+			spec = spec.and(ProductSpecifications.specFiltersFrom(category, specFilters));
+		}
+
+		return productRepository.findAll(spec, pageable)
+			.map(ProductListItemResponse::from);
+	}
+
+	public ProductFacetResponse getFacets(String category) {
+		List<String> brands = productRepository.findDistinctBrandsByCategory(category);
+
+		Map<String, List<String>> specOptions = new LinkedHashMap<>();
+		for (String key : CATEGORY_SPEC_FACETS.getOrDefault(category, List.of())) {
+			List<String> values = specFacetRepository.findDistinctSpecValues(category, "$.\"" + key + "\"");
+			specOptions.put(key, values);
+		}
+
+		Long minPrice = productRepository.findMinPriceByCategory(category);
+		Long maxPrice = productRepository.findMaxPriceByCategory(category);
+
+		return new ProductFacetResponse(
+			brands,
+			specOptions,
+			minPrice == null ? 0 : minPrice,
+			maxPrice == null ? 0 : maxPrice
+		);
 	}
 
 	public List<PopularProductResponse> findPopularProducts() {
@@ -91,27 +171,27 @@ public class ProductService {
 		return switch (category) {
 			case "CPU" -> new String[] {
 				"소켓", value(product.getSocketType()),
-				"코어 / 스레드", jsonValue(specs, "coreThread"),
+				"코어 수", jsonValue(specs, "Core Count"),
 				"기본 소비전력", watt(product.getPowerConsumption()),
-				"내장 그래픽", jsonValue(specs, "integratedGraphics")
+				"마이크로아키텍처", jsonValue(specs, "Microarchitecture")
 			};
 			case "GPU" -> new String[] {
-				"GPU 칩셋", jsonValue(specs, "chipset"),
-				"메모리", jsonValue(specs, "memory"),
+				"GPU 칩셋", jsonValue(specs, "Chipset"),
+				"메모리", jsonValue(specs, "Memory"),
 				"권장 파워", watt(product.getRecommendedPower()),
-				"인터페이스", jsonValue(specs, "interface")
+				"코어 클럭", jsonValue(specs, "Core Clock")
 			};
 			case "RAM" -> new String[] {
 				"메모리 규격", value(product.getMemoryType()),
-				"용량", jsonValue(specs, "capacity"),
-				"구성", jsonValue(specs, "configuration"),
-				"동작 속도", jsonValue(specs, "speed")
+				"구성", jsonValue(specs, "Modules"),
+				"동작 속도", jsonValue(specs, "Speed"),
+				"색상", jsonValue(specs, "Color")
 			};
 			case "STORAGE" -> new String[] {
-				"저장장치 유형", jsonValue(specs, "storageType"),
-				"용량", jsonValue(specs, "capacity"),
-				"인터페이스", jsonValue(specs, "interface"),
-				"폼팩터", value(product.getFormFactor())
+				"저장장치 유형", jsonValue(specs, "Type"),
+				"용량", jsonValue(specs, "Capacity"),
+				"폼팩터", value(product.getFormFactor()),
+				"제조사", value(product.getBrand())
 			};
 			default -> new String[] {
 				"카테고리", value(category),

@@ -199,6 +199,8 @@ CREATE TABLE QUOTE (
     quote_name     VARCHAR2(150) NOT NULL,
     quote_type     VARCHAR2(20)  NOT NULL,
     assembly_type  VARCHAR2(20)  DEFAULT 'SELF' NOT NULL,
+	 purpose_tag     VARCHAR2(20),
+	 summary_description VARCHAR2(200),
     created_at     TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at     TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
 

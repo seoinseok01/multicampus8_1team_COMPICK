@@ -1,5 +1,8 @@
 package com.boot.compick.cart.service;
 
+import java.util.HashSet;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,5 +87,39 @@ public class CartService {
 			cartItemCount,
 			"장바구니에 상품을 담았습니다."
 		);
+	}
+
+	@Transactional
+	public void select(String loginId, List<Long> cartItemIds) {
+		Long memberId = memberLookupRepository.findActiveMemberIdByLoginId(loginId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."));
+		CartEntity cart = cartRepository.findByMemberId(memberId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "장바구니를 찾을 수 없습니다."));
+		var selectedIds = new HashSet<>(cartItemIds == null ? List.<Long>of() : cartItemIds);
+		cartProductItemRepository.findAllByCartCartIdOrderByCartProductItemId(cart.getCartId())
+			.forEach(item -> item.select(selectedIds.contains(item.getCartProductItemId())));
+	}
+
+	@Transactional
+	public void removeSelected(Long memberId) {
+		cartRepository.findByMemberId(memberId).ifPresent(cart ->
+			cartProductItemRepository.deleteAllByCartCartIdAndSelected(cart.getCartId(), "Y"));
+	}
+
+	@Transactional
+	public void deleteItem(String loginId, Long cartItemId) {
+		Long memberId = memberLookupRepository.findActiveMemberIdByLoginId(loginId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."));
+		cartRepository.findByMemberId(memberId).ifPresent(cart ->
+			cartProductItemRepository.deleteByCartCartIdAndCartProductItemId(cart.getCartId(), cartItemId));
+	}
+
+	@Transactional
+	public void deleteItems(String loginId, List<Long> cartItemIds) {
+		if (cartItemIds == null || cartItemIds.isEmpty()) return;
+		Long memberId = memberLookupRepository.findActiveMemberIdByLoginId(loginId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."));
+		cartRepository.findByMemberId(memberId).ifPresent(cart ->
+			cartProductItemRepository.deleteAllByCartCartIdAndCartProductItemIdIn(cart.getCartId(), cartItemIds));
 	}
 }

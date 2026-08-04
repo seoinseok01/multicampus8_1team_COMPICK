@@ -48,4 +48,19 @@ public class CartQuoteService {
         cartRepository.findByMemberId(memberId).ifPresent(cart ->
                 cartQuoteItemRepository.deleteAllByCartCartIdAndSelected(cart.getCartId(), "Y"));
     }
+
+	@Transactional
+	public void deleteItem(String loginId, Long cartItemId) {
+		Long memberId = memberService.findActiveByLoginId(loginId).getId();
+		cartRepository.findByMemberId(memberId).ifPresent(cart ->
+			cartQuoteItemRepository.deleteByCartCartIdAndId(cart.getCartId(), cartItemId));
+	}
+
+	@Transactional
+	public void deleteItems(String loginId, List<Long> cartItemIds) {
+		if (cartItemIds == null || cartItemIds.isEmpty()) return;
+		Long memberId = memberService.findActiveByLoginId(loginId).getId();
+		cartRepository.findByMemberId(memberId).ifPresent(cart ->
+			cartQuoteItemRepository.deleteAllByCartCartIdAndIdIn(cart.getCartId(), cartItemIds));
+	}
 }

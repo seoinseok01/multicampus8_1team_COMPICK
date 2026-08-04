@@ -2,6 +2,8 @@ package com.boot.compick.product.entity;
 
 import java.time.LocalDateTime;
 
+import com.boot.compick.product.SpecJsonSupport;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -69,6 +71,15 @@ public class ProductEntity {
 	@Column(name = "recommended_power")
 	private Integer recommendedPower;
 
+	@Column(name = "gpu_length_mm")
+	private Integer gpuLengthMm;
+
+	@Column(name = "max_gpu_length_mm")
+	private Integer maxGpuLengthMm;
+
+	@Column(name = "power_capacity_watt")
+	private Integer powerCapacityWatt;
+
 	@Lob
 	@Column(name = "spec_json")
 	private String specJson;
@@ -77,6 +88,40 @@ public class ProductEntity {
 	private LocalDateTime createdAt;
 
 	protected ProductEntity() {
+	}
+
+	public static ProductEntity createFromCatalog(CategoryEntity category, String brand, String name,
+		long price, int ratingCount, String specJson, String imageUrl) {
+		ProductEntity product = new ProductEntity();
+		product.category = category;
+		product.productName = name;
+		product.brand = brand;
+		product.modelName = name;
+		product.price = price;
+		product.ratingCount = ratingCount;
+		product.stockQuantity = 10;
+		product.productDescription = name + " 상품의 상세 사양과 호환성 정보를 확인할 수 있습니다.";
+		product.imageUrl = imageUrl;
+		product.salesStatus = "ON_SALE";
+		product.socketType = SpecJsonSupport.readText(specJson, "Socket");
+		product.memoryType = SpecJsonSupport.readText(specJson, "Memory Type");
+		product.formFactor = SpecJsonSupport.readText(specJson, "Form Factor");
+		product.powerConsumption = firstInt(specJson, "TDP", "Wattage");
+		product.recommendedPower = SpecJsonSupport.readInt(specJson, "Recommended PSU");
+		product.gpuLengthMm = SpecJsonSupport.readInt(specJson, "Length");
+		product.maxGpuLengthMm = firstInt(specJson, "Maximum Video Card Length", "Max GPU Length");
+		product.powerCapacityWatt = SpecJsonSupport.readInt(specJson, "Wattage");
+		product.specJson = specJson;
+		product.createdAt = LocalDateTime.now();
+		return product;
+	}
+
+	private static Integer firstInt(String specJson, String... keys) {
+		for (String key : keys) {
+			Integer value = SpecJsonSupport.readInt(specJson, key);
+			if (value != null) return value;
+		}
+		return null;
 	}
 
 	public Long getProductId() {
@@ -141,6 +186,18 @@ public class ProductEntity {
 
 	public Integer getRecommendedPower() {
 		return recommendedPower;
+	}
+
+	public Integer getGpuLengthMm() {
+		return gpuLengthMm;
+	}
+
+	public Integer getMaxGpuLengthMm() {
+		return maxGpuLengthMm;
+	}
+
+	public Integer getPowerCapacityWatt() {
+		return powerCapacityWatt;
 	}
 
 	public String getSpecJson() {

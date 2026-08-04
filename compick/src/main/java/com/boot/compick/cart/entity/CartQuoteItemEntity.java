@@ -24,7 +24,7 @@ public class CartQuoteItemEntity {
         item.cart = cart;
         item.quote = quote;
         item.quantity = 1;
-        item.selected = "Y";
+        item.selected = "N";
         return item;
     }
 
@@ -35,4 +35,6 @@ public class CartQuoteItemEntity {
     public boolean isSelected() {
         return "Y".equals(selected);
     }
+
+    public void increaseQuantity(int quantity) { this.quantity += quantity; }
 }

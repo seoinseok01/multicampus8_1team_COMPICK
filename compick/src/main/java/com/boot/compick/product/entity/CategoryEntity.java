@@ -22,6 +22,10 @@ public class CategoryEntity {
 	protected CategoryEntity() {
 	}
 
+	public CategoryEntity(String categoryName) {
+		this.categoryName = categoryName;
+	}
+
 	public Long getCategoryId() {
 		return categoryId;
 	}

@@ -1,9 +1,32 @@
 package com.boot.compick.quote.repository;
 
+import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.boot.compick.quote.entity.PurposeTag;
 import com.boot.compick.quote.entity.QuoteEntity;
+import com.boot.compick.quote.entity.QuoteType;
 
 public interface QuoteRepository extends JpaRepository<QuoteEntity, Long> {
-    Optional<QuoteEntity> findByIdAndMemberId(Long id, Long memberId);
+	Optional<QuoteEntity> findByQuoteIdAndMemberId(Long quoteId, Long memberId);
+
+	default Optional<QuoteEntity> findByIdAndMemberId(Long id, Long memberId) {
+		return findByQuoteIdAndMemberId(id, memberId);
+	}
+
+	@EntityGraph(attributePaths = "items")
+	Optional<QuoteEntity> findByQuoteIdAndQuoteType(Long quoteId, QuoteType quoteType);
+
+	@EntityGraph(attributePaths = "items")
+	Optional<QuoteEntity> findById(Long quoteId);
+
+	List<QuoteEntity> findByQuoteTypeOrderByQuoteIdAsc(QuoteType quoteType);
+
+	List<QuoteEntity> findByQuoteTypeAndPurposeTagOrderByQuoteIdAsc(
+		QuoteType quoteType,
+		PurposeTag purposeTag
+	);
 }

@@ -11,4 +11,11 @@
 .quote-select > input { position: absolute; left: 0; top: 26px; width: 20px; height: 20px; accent-color: #2463eb; }
 .quote-select > input:not(:checked) + .quote-card { border-color: #d9dee8; }
 .quote-select > input:checked + .quote-card { border-color: #2463eb; }
-.selection-save { width: 100%; margin-top: 10px; padding: 12px; border: 1px solid #cfd7e6; border-radius: 10px; background: #fff; cursor: pointer; }
+.product-select { position: relative; display: block; padding-left: 34px; cursor: pointer; }
+.product-select > input { position: absolute; left: 0; top: 43px; width: 20px; height: 20px; accent-color: #2463eb; }
+.product-select > input:checked + .product-row { border-color: #2463eb; }
+.product-select .product-row { grid-template-columns: 72px minmax(0,1fr) auto auto; }
+.cart-item-delete { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #d8dee9; border-radius: 7px; background: #fff; color: #667085; font-size: 12px; font-weight: 700; cursor: pointer; }
+.cart-item-delete:hover { border-color: #dc2626; color: #dc2626; background: #fff7f7; }
+.selection-delete { width: 100%; margin-top: 10px; padding: 12px; border: 1px solid #dc2626; border-radius: 10px; background: #fff; color: #dc2626; font-weight: 700; cursor: pointer; }
+.selection-delete:hover { background: #fff7f7; }

@@ -35,10 +35,9 @@ public class AiQuoteService {
             throw new IllegalArgumentException("저장할 AI 견적 상품이 없습니다.");
         }
 
-        QuoteEntity quote = quoteRepository.save(QuoteEntity.ai(member, quoteName(requirements)));
-        quoteItemRepository.saveAll(products.stream()
-                .map(product -> QuoteItemEntity.create(quote, product))
-                .toList());
+        QuoteEntity quote = QuoteEntity.createAi(member.getId(), quoteName(requirements));
+        products.forEach(product -> quote.addItem(product.getProductId(), 1));
+        quoteRepository.save(quote);
         recommendationRepository.save(AiRecommendationEntity.create(
                 quote, requirements, toJson(response)));
         return quote;

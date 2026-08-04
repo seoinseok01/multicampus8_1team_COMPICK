@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>견적 쇼핑 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script th:src="@{/js/quote-builder.js}" defer></script>
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="quote-builder-page">
+		<section class="page-heading">
+			<p>PC QUOTATION</p>
+			<h1>조립 견적 만들기</h1>
+			<span>부품을 선택하면 예상 소비전력과 총금액을 확인합니다.</span>
+		</section>
+
+		<div class="quote-builder-layout">
+			<aside class="quote-category-panel" aria-label="부품 카테고리">
+				<h2>부품 카테고리</h2>
+				<ul>
+					<li th:each="tab, iter : ${categoryTabs}">
+						<button
+							type="button"
+							th:text="${tab.label}"
+							th:data-category="${tab.name}"
+							th:classappend="${iter.first} ? 'is-active'">
+							CPU
+						</button>
+					</li>
+				</ul>
+			</aside>
+
+			<section class="quote-product-panel">
+				<div class="section-toolbar">
+					<div>
+						<h2 data-selected-category-title>CPU 선택</h2>
+					</div>
+					<div class="sort-button-group" role="group" aria-label="정렬">
+						<button type="button" class="is-active" data-sort="popular">인기순</button>
+						<button type="button" data-sort="priceAsc">가격 낮은순</button>
+					</div>
+				</div>
+				<div class="storage-type-toggle" data-storage-type-toggle hidden role="group" aria-label="저장장치 유형">
+					<button type="button" class="is-active" data-storage-type="">전체</button>
+					<button type="button" data-storage-type="SSD">SSD</button>
+					<button type="button" data-storage-type="HDD">HDD</button>
+				</div>
+				<ul class="product-grid" data-quote-product-grid></ul>
+				<p class="loading-indicator" data-loading-indicator hidden>불러오는 중...</p>
+			</section>
+
+			<aside class="quote-summary-panel" aria-label="내 견적서">
+				<h2>내 견적서</h2>
+				<p class="quote-summary-label">선택한 부품</p>
+				<ul class="quote-summary-list" data-summary-list></ul>
+
+				<div class="compatibility-banner" data-compatibility-banner></div>
+
+				<div class="quote-power-row">
+					<span>예상 소비전력</span>
+					<strong data-estimated-power>-</strong>
+				</div>
+
+				<div class="quote-assembly-row">
+					<span>조립 방식 <em>*필수</em></span>
+					<label>
+						<input type="radio" name="assemblyType" value="ASSEMBLED" data-assembly-option>
+						조립 요청 <b>+30,000원</b>
+					</label>
+					<label>
+						<input type="radio" name="assemblyType" value="SELF" data-assembly-option>
+						직접 조립 <b>+0원</b>
+					</label>
+				</div>
+
+				<div class="quote-total-row">
+					<span>총금액</span>
+					<strong data-total-price>0원</strong>
+				</div>
+
+				<button type="button" class="quote-submit-button" data-submit-quote disabled>
+					부품을 모두 선택해 주세요
+				</button>
+			</aside>
+		</div>
+	</main>
+	<p id="cart-feedback" class="cart-feedback" role="status" aria-live="polite" hidden></p>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		window.__QUOTE_INITIAL_ITEMS__ = /*[[${initialItemsJson}]]*/ '[]';
+		/*]]>*/
+	</script>
+</body>
+</html>

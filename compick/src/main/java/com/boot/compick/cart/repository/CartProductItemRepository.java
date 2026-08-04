@@ -28,6 +28,10 @@ public interface CartProductItemRepository
 		Long cartId,
 		String selected
 	);
+	List<CartProductItemEntity> findAllByCartCartIdOrderByCartProductItemId(Long cartId);
+	void deleteAllByCartCartIdAndSelected(Long cartId, String selected);
+	long deleteByCartCartIdAndCartProductItemId(Long cartId, Long cartProductItemId);
+	void deleteAllByCartCartIdAndCartProductItemIdIn(Long cartId, List<Long> cartProductItemIds);
 
 	void deleteAllByCartCartId(Long cartId);
 }
