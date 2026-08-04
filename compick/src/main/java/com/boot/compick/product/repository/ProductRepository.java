@@ -1,6 +1,7 @@
 package com.boot.compick.product.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,6 +27,8 @@ public interface ProductRepository
 			+ "order by p.brand"
 	)
 	List<String> findDistinctBrandsByCategory(@Param("categoryName") String categoryName);
+
+	Optional<ProductEntity> findFirstByProductName(String productName);
 
 	@Query(
 		"select min(p.price) from ProductEntity p "

@@ -6,6 +6,8 @@
     <title>AI 견적 | COMPICK</title>
     <link rel="stylesheet" th:href="@{/css/main.css}">
     <link rel="stylesheet" th:href="@{/shopping/css/ai-recommendation.css}">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
     <script th:src="@{/shopping/js/ai-recommendation.js}" defer></script>
 </head>
 <body>
@@ -113,9 +115,17 @@
                     <p class="compatibility-message">✓ 호환성 검사 통과</p>
                     <p class="result-warning" th:if="${recommendation.warning()}" th:text="${recommendation.warning()}"></p>
                     <div class="total-price"><b>총금액</b><strong th:text="${#numbers.formatInteger(totalPrice, 0, 'COMMA') + '원'}">0원</strong></div>
-                    <button type="button" class="integration-button secondary">견적 쇼핑에서 수정</button>
-                    <button type="button" class="integration-button primary">장바구니 담기</button>
-                    <p class="integration-notice" hidden>정식 견적·장바구니 기능이 준비되면 연결됩니다.</p>
+                    <a th:if="${quoteId}" class="integration-button secondary"
+                        th:href="@{/quotes/new(basedOn=${quoteId})}">견적 쇼핑에서 수정</a>
+                    <a th:unless="${quoteId}" class="integration-button secondary"
+                        th:href="@{/login}">로그인 후 견적 수정</a>
+
+                    <button th:if="${quoteId}" type="button" class="integration-button primary"
+                        data-add-quote-to-cart th:data-quote-id="${quoteId}">장바구니 담기</button>
+                    <a th:unless="${quoteId}" class="integration-button primary"
+                        th:href="@{/login}">로그인 후 장바구니 담기</a>
+
+                    <p class="integration-notice" th:if="${cartIntegrationError}" th:text="${cartIntegrationError}"></p>
                 </section>
             </div>
         </section>

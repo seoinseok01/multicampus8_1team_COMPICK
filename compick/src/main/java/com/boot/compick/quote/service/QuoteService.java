@@ -87,15 +87,20 @@ public class QuoteService {
 		return addToCart(memberId, savedQuote.getQuoteId());
 	}
 
+	/**
+	 * PRESET(추천 견적, 공개)은 누구나 담을 수 있고, 그 외(예: AI 견적)는
+	 * findQuoteItemsForEditing과 동일하게 본인 소유일 때만 담을 수 있다.
+	 */
 	@Transactional
 	public CartQuoteItemResponse addExistingQuoteToCart(String loginId, Long quoteId) {
-		quoteRepository.findByQuoteIdAndQuoteType(quoteId, QuoteType.PRESET)
-			.orElseThrow(() -> new ResponseStatusException(
-				HttpStatus.NOT_FOUND,
-				"추천 견적을 찾을 수 없습니다."
-			));
+		QuoteEntity quote = quoteRepository.findById(quoteId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "견적을 찾을 수 없습니다."));
 
 		Long memberId = memberService.findActiveByLoginId(loginId).getId();
+		if (quote.getQuoteType() != QuoteType.PRESET && !memberId.equals(quote.getMemberId())) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "견적을 찾을 수 없습니다.");
+		}
+
 		return addToCart(memberId, quoteId);
 	}
 

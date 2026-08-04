@@ -26,10 +26,33 @@ document.addEventListener("DOMContentLoaded", function () {
         form.querySelector("button[type='submit']").disabled = true;
     });
 
-    document.querySelectorAll(".integration-button").forEach((button) => {
-        button.addEventListener("click", () => {
-            const notice = document.querySelector(".integration-notice");
-            if (notice) notice.hidden = false;
-        });
+    const addToCartButton = document.querySelector("[data-add-quote-to-cart]");
+    addToCartButton?.addEventListener("click", async () => {
+        const quoteId = addToCartButton.dataset.quoteId;
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+        const headers = {};
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+
+        addToCartButton.disabled = true;
+        try {
+            const response = await fetch(`/api/cart/quotes/${quoteId}`, {
+                method: "POST",
+                headers
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(result.message || result.detail || "장바구니에 담지 못했습니다.");
+            }
+            if (window.confirm("견적을 장바구니에 담았습니다.\n장바구니로 이동하시겠습니까?")) {
+                window.location.assign("/cart");
+            }
+        } catch (error) {
+            window.alert(error.message);
+        } finally {
+            addToCartButton.disabled = false;
+        }
     });
 });

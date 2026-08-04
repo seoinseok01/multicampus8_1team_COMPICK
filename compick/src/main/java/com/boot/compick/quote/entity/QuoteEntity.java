@@ -87,6 +87,10 @@ public class QuoteEntity {
 		return new QuoteEntity(memberId, quoteName, QuoteType.USER, assemblyType, null, null);
 	}
 
+	public static QuoteEntity createAi(Long memberId, String quoteName) {
+		return new QuoteEntity(memberId, quoteName, QuoteType.AI, AssemblyType.SELF, null, null);
+	}
+
 	/**
 	 * 관리자(향후 관리자 페이지)가 추천 견적을 등록할 때 사용하는 팩토리.
 	 * memberId는 시스템 계정 소유로 고정되며, 실제 소유자는 quoteType=PRESET으로 구분한다.
