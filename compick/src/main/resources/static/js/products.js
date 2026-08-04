@@ -1,3 +1,16 @@
+const SPEC_LABELS = {
+	"Socket": "소켓",
+	"Core Count": "코어 수",
+	"Memory Type": "메모리 규격",
+	"Form Factor": "폼팩터",
+	"Chipset": "칩셋",
+	"Memory": "메모리",
+	"Speed": "속도",
+	"Type": "유형",
+	"Wattage": "정격 출력",
+	"Efficiency": "인증 등급"
+};
+
 document.addEventListener("DOMContentLoaded", () => {
 	const grid = document.querySelector("[data-product-grid]");
 	if (!grid) {
@@ -33,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		maxPrice: null,
 		storageType: "",
 		sort: "popular",
+		keyword: grid.dataset.initialKeyword ?? "",
 		specFilters: {},
 		page: Number(grid.dataset.initialPage ?? 0),
 		size: 20,
@@ -135,6 +149,10 @@ document.addEventListener("DOMContentLoaded", () => {
 		const name = document.createElement("h3");
 		name.textContent = product.name;
 
+		const specLine = document.createElement("p");
+		specLine.className = "product-spec-line";
+		specLine.textContent = Object.values(product.specs ?? {}).join(" / ");
+
 		const price = document.createElement("strong");
 		price.textContent = formatPrice(product.price);
 
@@ -146,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		button.disabled = product.stockQuantity <= 0;
 		button.addEventListener("click", () => addToCart(product.productId, button));
 
-		li.append(image, brand, name, price, button);
+		li.append(image, brand, name, specLine, price, button);
 		return li;
 	};
 
@@ -165,6 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 		if (state.storageType) {
 			params.set("storageType", state.storageType);
+		}
+		if (state.keyword) {
+			params.set("keyword", state.keyword);
 		}
 		Object.entries(state.specFilters).forEach(([key, value]) => {
 			if (value) {
@@ -239,8 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (!minPriceRange || !maxPriceRange) {
 			return;
 		}
-		const lower = Math.floor(minPrice);
-		const upper = Math.max(Math.ceil(maxPrice), lower + 1);
+		const lower = Math.floor(minPrice / 1000) * 1000;
+		const upper = Math.max(Math.ceil(maxPrice / 1000) * 1000, lower + 1000);
 		[minPriceRange, maxPriceRange].forEach((input) => {
 			input.min = String(lower);
 			input.max = String(upper);
@@ -325,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 				const defaultOption = document.createElement("option");
 				defaultOption.value = "";
-				defaultOption.textContent = key;
+				defaultOption.textContent = SPEC_LABELS[key] ?? key;
 				select.appendChild(defaultOption);
 
 				values.forEach((value) => {
@@ -393,10 +414,36 @@ document.addEventListener("DOMContentLoaded", () => {
 		resetAndReload();
 	});
 
+	const headerSearchForm = document.querySelector(".header-search");
+	const headerSearchInput = document.querySelector("#header-keyword");
+	headerSearchForm?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		state.keyword = headerSearchInput?.value.trim() ?? "";
+		resetAndReload();
+	});
+
 	document.querySelectorAll(".product-grid .add-cart-button").forEach((button) => {
 		button.addEventListener("click", () => {
 			addToCart(Number(button.dataset.productId), button);
 		});
+	});
+
+	grid.addEventListener("click", (event) => {
+		if (event.target.closest(".add-cart-button")) {
+			return;
+		}
+		const item = event.target.closest(".product-grid-item");
+		const button = item?.querySelector(".add-cart-button");
+		const productId = button ? Number(button.dataset.productId) : null;
+		if (!productId) {
+			return;
+		}
+		window.ProductModal?.open(productId, [
+			{
+				label: "장바구니 담기",
+				onClick: () => addToCart(productId, null)
+			}
+		]);
 	});
 
 	if (scrollSentinel && "IntersectionObserver" in window) {

@@ -22,6 +22,14 @@ public final class CategoryDisplay {
 		new CategoryTab("CASE", "케이스")
 	);
 
+	public static String labelOf(String categoryName) {
+		return CATEGORY_TABS.stream()
+			.filter(tab -> tab.name().equals(categoryName))
+			.map(CategoryTab::label)
+			.findFirst()
+			.orElse(categoryName);
+	}
+
 	private CategoryDisplay() {
 	}
 }

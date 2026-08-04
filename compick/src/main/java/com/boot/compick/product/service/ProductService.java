@@ -7,10 +7,13 @@ import java.util.Map;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.boot.compick.product.dto.PopularProductResponse;
+import com.boot.compick.product.dto.ProductDetailResponse;
 import com.boot.compick.product.dto.ProductFacetResponse;
 import com.boot.compick.product.dto.ProductListItemResponse;
 import com.boot.compick.product.entity.ProductEntity;
@@ -107,6 +110,12 @@ public class ProductService {
 			minPrice == null ? 0 : minPrice,
 			maxPrice == null ? 0 : maxPrice
 		);
+	}
+
+	public ProductDetailResponse getDetail(Long productId) {
+		ProductEntity product = productRepository.findById(productId)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "상품을 찾을 수 없습니다."));
+		return ProductDetailResponse.from(product);
 	}
 
 	public List<PopularProductResponse> findPopularProducts() {

@@ -1,5 +1,7 @@
 package com.boot.compick.product.dto;
 
+import java.util.Map;
+
 import com.boot.compick.product.SpecJsonSupport;
 import com.boot.compick.product.entity.ProductEntity;
 
@@ -20,8 +22,13 @@ public record ProductListItemResponse(
 	Integer gpuLengthMm,
 	Integer maxGpuLengthMm,
 	Integer powerCapacityWatt,
-	Integer memorySlots
+	Integer memorySlots,
+	Map<String, String> specs
 ) {
+
+	public String specSummary() {
+		return String.join(" / ", specs.values());
+	}
 
 	public static ProductListItemResponse from(ProductEntity product) {
 		String category = product.getCategory().getCategoryName();
@@ -46,7 +53,8 @@ public record ProductListItemResponse(
 			product.getGpuLengthMm(),
 			product.getMaxGpuLengthMm(),
 			product.getPowerCapacityWatt(),
-			memorySlots
+			memorySlots,
+			SpecJsonSupport.readAll(product.getSpecJson())
 		);
 	}
 }

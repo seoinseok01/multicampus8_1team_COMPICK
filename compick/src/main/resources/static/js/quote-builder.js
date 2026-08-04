@@ -1,5 +1,18 @@
+const SPEC_LABELS = {
+	"Socket": "소켓",
+	"Core Count": "코어 수",
+	"Memory Type": "메모리 규격",
+	"Form Factor": "폼팩터",
+	"Chipset": "칩셋",
+	"Memory": "메모리",
+	"Speed": "속도",
+	"Type": "유형",
+	"Wattage": "정격 출력",
+	"Efficiency": "인증 등급"
+};
+
 document.addEventListener("DOMContentLoaded", () => {
-	const categoryButtons = document.querySelectorAll(".quote-category-panel button[data-category]");
+	const categoryButtons = document.querySelectorAll(".category-tabs button[data-category]");
 	if (categoryButtons.length === 0) {
 		return;
 	}
@@ -15,8 +28,19 @@ document.addEventListener("DOMContentLoaded", () => {
 	const estimatedPowerElement = document.querySelector("[data-estimated-power]");
 	const totalPriceElement = document.querySelector("[data-total-price]");
 	const submitButton = document.querySelector("[data-submit-quote]");
+	const summaryPanel = document.querySelector(".quote-summary-panel");
+	const summaryContainer = document.querySelector(".quote-builder-layout");
 	const assemblyOptions = document.querySelectorAll("[data-assembly-option]");
 	const feedback = document.querySelector("#cart-feedback");
+	const brandList = document.querySelector("[data-brand-list]");
+	const specList = document.querySelector("[data-spec-list]");
+	const minPriceRange = document.querySelector("[data-min-price-range]");
+	const maxPriceRange = document.querySelector("[data-max-price-range]");
+	const priceSliderRange = document.querySelector("[data-price-slider-range]");
+	const minPriceLabel = document.querySelector("[data-min-price-label]");
+	const maxPriceLabel = document.querySelector("[data-max-price-label]");
+	const applyFilterButton = document.querySelector("[data-apply-filter]");
+	const resetFilterButton = document.querySelector("[data-reset-filter]");
 
 	const ASSEMBLY_FEE = 30000;
 	const RAM_CATEGORY = "RAM";
@@ -28,12 +52,156 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	// 카테고리별 단일 선택 상품(또는 RAM은 { ...product, quantity } 배열)을 보관한다.
 	const selected = {};
+	// 상세 팝업에서 담기/추가를 누를 때 호환성 검사에 필요한 원본 필드(소켓 등)를 잃지 않도록 보관한다.
+	const productsById = new Map();
 	let currentCategory = categories[0].name;
 	let sort = "popular";
 	let storageType = "";
+	let keyword = "";
+	let brands = [];
+	let minPrice = null;
+	let maxPrice = null;
+	let specFilters = {};
 	let feedbackTimer = null;
+	let priceSliderTimer = null;
 
 	const formatPrice = (price) => new Intl.NumberFormat("ko-KR").format(Number(price)) + "원";
+
+	const updatePriceSliderVisual = () => {
+		if (!minPriceRange || !maxPriceRange || !priceSliderRange) {
+			return;
+		}
+		const min = Number(minPriceRange.min);
+		const max = Number(minPriceRange.max);
+		const span = max - min || 1;
+		const left = ((Number(minPriceRange.value) - min) / span) * 100;
+		const right = ((Number(maxPriceRange.value) - min) / span) * 100;
+		priceSliderRange.style.left = `${left}%`;
+		priceSliderRange.style.right = `${100 - right}%`;
+		if (minPriceLabel) minPriceLabel.textContent = formatPrice(minPriceRange.value);
+		if (maxPriceLabel) maxPriceLabel.textContent = formatPrice(maxPriceRange.value);
+	};
+
+	const setupPriceSlider = (rawMinPrice, rawMaxPrice) => {
+		if (!minPriceRange || !maxPriceRange) {
+			return;
+		}
+		const lower = Math.floor(rawMinPrice / 1000) * 1000;
+		const upper = Math.max(Math.ceil(rawMaxPrice / 1000) * 1000, lower + 1000);
+		[minPriceRange, maxPriceRange].forEach((input) => {
+			input.min = String(lower);
+			input.max = String(upper);
+			input.step = "1000";
+		});
+		minPriceRange.value = String(lower);
+		maxPriceRange.value = String(upper);
+		minPrice = lower;
+		maxPrice = upper;
+		updatePriceSliderVisual();
+	};
+
+	const onPriceSliderInput = () => {
+		if (!minPriceRange || !maxPriceRange) {
+			return;
+		}
+		if (Number(minPriceRange.value) > Number(maxPriceRange.value)) {
+			const swapTarget = document.activeElement === minPriceRange ? maxPriceRange : minPriceRange;
+			swapTarget.value = document.activeElement === minPriceRange
+				? minPriceRange.value
+				: maxPriceRange.value;
+		}
+		minPrice = Number(minPriceRange.value);
+		maxPrice = Number(maxPriceRange.value);
+		updatePriceSliderVisual();
+
+		window.clearTimeout(priceSliderTimer);
+		priceSliderTimer = window.setTimeout(() => {
+			fetchCategoryProducts();
+		}, 250);
+	};
+
+	minPriceRange?.addEventListener("input", onPriceSliderInput);
+	maxPriceRange?.addEventListener("input", onPriceSliderInput);
+
+	const loadFacets = async (category) => {
+		if (storageTypeToggle) {
+			storageTypeToggle.hidden = category !== "STORAGE";
+			storageType = "";
+			storageTypeButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.storageType === ""));
+		}
+		if (!brandList || !specList) {
+			return;
+		}
+		brandList.innerHTML = "";
+		specList.innerHTML = "";
+
+		try {
+			const response = await fetch(`/api/products/${category}/facets`);
+			if (!response.ok) {
+				return;
+			}
+			const facets = await response.json();
+
+			setupPriceSlider(facets.minPrice, facets.maxPrice);
+
+			facets.brands.forEach((brand) => {
+				const label = document.createElement("label");
+				label.className = "brand-checkbox";
+				const checkbox = document.createElement("input");
+				checkbox.type = "checkbox";
+				checkbox.value = brand;
+				label.append(checkbox, document.createTextNode(brand));
+				brandList.appendChild(label);
+			});
+
+			Object.entries(facets.specOptions).forEach(([key, values]) => {
+				if (!values || values.length === 0) {
+					return;
+				}
+				const select = document.createElement("select");
+				select.dataset.specKey = key;
+
+				const defaultOption = document.createElement("option");
+				defaultOption.value = "";
+				defaultOption.textContent = SPEC_LABELS[key] ?? key;
+				select.appendChild(defaultOption);
+
+				values.forEach((value) => {
+					const option = document.createElement("option");
+					option.value = value;
+					option.textContent = value;
+					select.appendChild(option);
+				});
+
+				specList.appendChild(select);
+			});
+		} catch (error) {
+			// 필터 옵션은 부가 기능이라 실패해도 상품 목록 조회는 계속한다
+		}
+	};
+
+	applyFilterButton?.addEventListener("click", () => {
+		brands = Array.from(brandList?.querySelectorAll("input:checked") ?? [])
+			.map((input) => input.value);
+		specFilters = {};
+		specList?.querySelectorAll("select").forEach((select) => {
+			if (select.value) {
+				specFilters[select.dataset.specKey] = select.value;
+			}
+		});
+		fetchCategoryProducts();
+	});
+
+	resetFilterButton?.addEventListener("click", () => {
+		brands = [];
+		specFilters = {};
+		if (minPriceRange && maxPriceRange) {
+			setupPriceSlider(Number(minPriceRange.min), Number(minPriceRange.max));
+		}
+		brandList?.querySelectorAll("input").forEach((input) => { input.checked = false; });
+		specList?.querySelectorAll("select").forEach((select) => { select.value = ""; });
+		fetchCategoryProducts();
+	});
 
 	const showFeedback = (message, isError = false) => {
 		if (!feedback) {
@@ -159,6 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
 	const renderProductCard = (product) => {
 		const li = document.createElement("li");
 		li.className = "product-grid-item";
+		li.dataset.productId = product.productId;
 
 		const isRam = product.category === RAM_CATEGORY;
 		const ramLine = isRam
@@ -190,6 +359,10 @@ document.addEventListener("DOMContentLoaded", () => {
 		const name = document.createElement("h3");
 		name.textContent = product.name;
 
+		const specLine = document.createElement("p");
+		specLine.className = "product-spec-line";
+		specLine.textContent = Object.values(product.specs ?? {}).join(" / ");
+
 		const price = document.createElement("strong");
 		price.textContent = formatPrice(product.price);
 
@@ -209,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		});
 
-		li.append(image, brand, name, price, button);
+		li.append(image, brand, name, specLine, price, button);
 		return li;
 	};
 
@@ -230,13 +403,31 @@ document.addEventListener("DOMContentLoaded", () => {
 			if (currentCategory === "STORAGE" && storageType) {
 				params.set("storageType", storageType);
 			}
+			if (keyword) {
+				params.set("keyword", keyword);
+			}
+			brands.forEach((brand) => params.append("brands", brand));
+			if (minPrice != null) {
+				params.set("minPrice", String(minPrice));
+			}
+			if (maxPrice != null) {
+				params.set("maxPrice", String(maxPrice));
+			}
+			Object.entries(specFilters).forEach(([key, value]) => {
+				if (value) {
+					params.set(`spec_${key.replace(/ /g, "_")}`, value);
+				}
+			});
 			const response = await fetch(`/api/products?${params.toString()}`);
 			if (!response.ok) {
 				throw new Error("상품을 불러오지 못했습니다.");
 			}
 			const pageResult = await response.json();
 			productGrid.innerHTML = "";
-			pageResult.content.forEach((product) => productGrid.appendChild(renderProductCard(product)));
+			pageResult.content.forEach((product) => {
+				productsById.set(product.productId, product);
+				productGrid.appendChild(renderProductCard(product));
+			});
 		} catch (error) {
 			showFeedback(error.message, true);
 		} finally {
@@ -397,6 +588,35 @@ document.addEventListener("DOMContentLoaded", () => {
 		return li;
 	};
 
+	/*
+	 * 견적서 패널이 뷰포트보다 길 때, 별도 내부 스크롤 없이 페이지 스크롤과 함께
+	 * 아래쪽까지 자연스럽게 드러나도록 top 오프셋을 스크롤에 맞춰 동적으로 조정한다.
+	 */
+	const SUMMARY_HEADER_GAP = 96;
+	const SUMMARY_BOTTOM_GAP = 24;
+
+	const updateSummarySticky = () => {
+		if (!summaryPanel || !summaryContainer) {
+			return;
+		}
+		const containerRect = summaryContainer.getBoundingClientRect();
+		const panelHeight = summaryPanel.offsetHeight;
+		const availableHeight = window.innerHeight - SUMMARY_HEADER_GAP - SUMMARY_BOTTOM_GAP;
+		const overflow = panelHeight - availableHeight;
+
+		if (overflow <= 0) {
+			summaryPanel.style.top = `${SUMMARY_HEADER_GAP}px`;
+			return;
+		}
+
+		const scrolledPast = SUMMARY_HEADER_GAP - containerRect.top;
+		const offset = Math.min(Math.max(scrolledPast, 0), overflow);
+		summaryPanel.style.top = `${SUMMARY_HEADER_GAP - offset}px`;
+	};
+
+	window.addEventListener("scroll", updateSummarySticky, { passive: true });
+	window.addEventListener("resize", updateSummarySticky);
+
 	const renderSummary = () => {
 		if (!summaryList) {
 			return;
@@ -485,6 +705,8 @@ document.addEventListener("DOMContentLoaded", () => {
 				submitButton.textContent = "장바구니 담기";
 			}
 		}
+
+		updateSummarySticky();
 	};
 
 	const submitQuote = async () => {
@@ -546,11 +768,11 @@ document.addEventListener("DOMContentLoaded", () => {
 			if (categoryTitle) {
 				categoryTitle.textContent = `${button.textContent.trim()} 선택`;
 			}
-			if (storageTypeToggle) {
-				storageTypeToggle.hidden = currentCategory !== "STORAGE";
-				storageType = "";
-				storageTypeButtons.forEach((b) => b.classList.toggle("is-active", b.dataset.storageType === ""));
-			}
+			brands = [];
+			minPrice = null;
+			maxPrice = null;
+			specFilters = {};
+			loadFacets(currentCategory);
 			fetchCategoryProducts();
 		});
 	});
@@ -571,6 +793,33 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	});
 
+	const headerSearchForm = document.querySelector(".header-search");
+	const headerSearchInput = document.querySelector("#header-keyword");
+	headerSearchForm?.addEventListener("submit", (event) => {
+		event.preventDefault();
+		keyword = headerSearchInput?.value.trim() ?? "";
+		fetchCategoryProducts();
+	});
+
+	productGrid?.addEventListener("click", (event) => {
+		if (event.target.closest("button")) {
+			return;
+		}
+		const item = event.target.closest(".product-grid-item");
+		const productId = item ? Number(item.dataset.productId) : null;
+		const product = productId ? productsById.get(productId) : null;
+		if (!product) {
+			return;
+		}
+		const isRam = product.category === RAM_CATEGORY;
+		window.ProductModal?.open(productId, [
+			{
+				label: isRam ? "견적에 추가" : "견적에 담기",
+				onClick: () => (isRam ? addRamItem(product) : selectItem(product))
+			}
+		]);
+	});
+
 	assemblyOptions.forEach((option) => {
 		option.addEventListener("change", renderSummary);
 	});
@@ -579,5 +828,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	loadInitialItems();
 	renderSummary();
+	loadFacets(currentCategory);
 	fetchCategoryProducts();
 });

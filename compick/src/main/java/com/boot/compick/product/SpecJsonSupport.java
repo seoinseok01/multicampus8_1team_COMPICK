@@ -1,5 +1,7 @@
 package com.boot.compick.product;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,6 +18,25 @@ public final class SpecJsonSupport {
 	private static final Pattern DIGITS = Pattern.compile("\\d+");
 
 	private SpecJsonSupport() {
+	}
+
+	public static Map<String, String> readAll(String specJson) {
+		Map<String, String> specs = new LinkedHashMap<>();
+		if (specJson == null || specJson.isBlank()) {
+			return specs;
+		}
+		try {
+			JsonNode node = MAPPER.readTree(specJson);
+			node.fields().forEachRemaining(entry -> {
+				String value = entry.getValue().asText();
+				if (!value.isBlank()) {
+					specs.put(entry.getKey(), value);
+				}
+			});
+		} catch (Exception ignored) {
+			// 파싱 실패 시 빈 사양 목록으로 처리한다
+		}
+		return specs;
 	}
 
 	public static Integer readInt(String specJson, String key) {

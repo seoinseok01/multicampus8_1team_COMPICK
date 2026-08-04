@@ -7,6 +7,7 @@
 	<link rel="stylesheet" th:href="@{/css/main.css}">
 	<meta name="_csrf" th:content="${_csrf.token}">
 	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<script th:src="@{/js/product-modal.js}" defer></script>
 	<script th:src="@{/js/products.js}" defer></script>
 </head>
 <body>
@@ -29,34 +30,44 @@
 			</button>
 		</nav>
 
-		<div class="catalog-layout">
-			<aside class="filter-panel" aria-label="상품 필터">
-				<h2>검색 및 필터</h2>
+		<div class="filter-bar" aria-label="상품 필터">
+			<div class="filter-row">
+				<div class="filter-group">
+					<label>제조사</label>
+					<div class="brand-checkbox-list" data-brand-list></div>
+				</div>
+			</div>
 
-				<label>제조사</label>
-				<div class="brand-checkbox-list" data-brand-list></div>
-
-				<label>가격 범위</label>
-				<div class="price-slider" data-price-slider>
-					<div class="price-slider-values">
-						<span data-min-price-label>0원</span>
-						<span>~</span>
-						<span data-max-price-label>0원</span>
-					</div>
-					<div class="price-slider-track">
-						<div class="price-slider-range" data-price-slider-range></div>
-						<input type="range" data-min-price-range aria-label="최소 가격">
-						<input type="range" data-max-price-range aria-label="최대 가격">
+			<div class="filter-row">
+				<div class="filter-group filter-group-price">
+					<label>가격 범위</label>
+					<div class="price-slider" data-price-slider>
+						<div class="price-slider-values">
+							<span data-min-price-label>0원</span>
+							<span>~</span>
+							<span data-max-price-label>0원</span>
+						</div>
+						<div class="price-slider-track">
+							<div class="price-slider-range" data-price-slider-range></div>
+							<input type="range" data-min-price-range aria-label="최소 가격">
+							<input type="range" data-max-price-range aria-label="최대 가격">
+						</div>
 					</div>
 				</div>
 
-				<label>주요 사양</label>
-				<div class="spec-filter-list" data-spec-list></div>
+				<div class="filter-group">
+					<label>주요 사양</label>
+					<div class="spec-filter-list" data-spec-list></div>
+				</div>
 
-				<button type="button" data-apply-filter>필터 적용</button>
-				<button type="button" class="filter-reset-button" data-reset-filter>초기화</button>
-			</aside>
+				<div class="filter-actions">
+					<button type="button" data-apply-filter>필터 적용</button>
+					<button type="button" class="filter-reset-button" data-reset-filter>초기화</button>
+				</div>
+			</div>
+		</div>
 
+		<div class="catalog-layout">
 			<section class="catalog-content" aria-labelledby="product-list-title">
 				<div class="section-toolbar">
 					<div>
@@ -83,7 +94,8 @@
 					data-product-grid
 					th:data-initial-category="CPU"
 					th:data-initial-page="${initialProducts.number}"
-					th:data-initial-has-next="${initialProducts.hasNext()}">
+					th:data-initial-has-next="${initialProducts.hasNext()}"
+					th:data-initial-keyword="${initialKeyword}">
 					<li class="product-grid-item" th:each="product : ${initialProducts.content}">
 						<img
 							class="product-image"
@@ -99,6 +111,7 @@
 							height="132">
 						<p th:text="${product.brand}">브랜드</p>
 						<h3 th:text="${product.name}">상품명</h3>
+						<p class="product-spec-line" th:text="${product.specSummary()}">사양</p>
 						<strong th:text="|${#numbers.formatInteger(product.price, 0, 'COMMA')}원|">0원</strong>
 						<button
 							type="button"

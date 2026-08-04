@@ -5,6 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.boot.compick.product.CategoryDisplay;
 import com.boot.compick.product.service.ProductService;
@@ -21,8 +22,12 @@ public class ShoppingPageController {
 	}
 
 	@GetMapping("/products")
-	public String products(Model model) {
+	public String products(
+		@RequestParam(required = false) String keyword,
+		Model model
+	) {
 		model.addAttribute("categoryTabs", CategoryDisplay.CATEGORY_TABS);
+		model.addAttribute("initialKeyword", keyword == null ? "" : keyword);
 		model.addAttribute(
 			"initialProducts",
 			productService.listProducts(
@@ -30,7 +35,7 @@ public class ShoppingPageController {
 				null,
 				null,
 				null,
-				null,
+				keyword,
 				null,
 				null,
 				PageRequest.of(0, INITIAL_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "ratingCount"))

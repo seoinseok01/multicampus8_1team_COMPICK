@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.boot.compick.product.dto.ProductDetailResponse;
 import com.boot.compick.product.dto.ProductFacetResponse;
 import com.boot.compick.product.dto.ProductListItemResponse;
 import com.boot.compick.product.service.ProductService;
@@ -58,6 +59,11 @@ public class ProductApiController {
 	@GetMapping("/api/products/{category}/facets")
 	public ProductFacetResponse facets(@PathVariable String category) {
 		return productService.getFacets(category);
+	}
+
+	@GetMapping("/api/products/detail/{productId}")
+	public ProductDetailResponse detail(@PathVariable Long productId) {
+		return productService.getDetail(productId);
 	}
 
 	private Sort sortFor(String sort) {
