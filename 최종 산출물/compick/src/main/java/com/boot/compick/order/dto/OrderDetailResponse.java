@@ -17,6 +17,7 @@ public record OrderDetailResponse(
 	String deliveryRequest,
 	String paymentMethodLabel,
 	Long paymentAmount,
-	boolean cancellable
+	boolean cancellable,
+	boolean returnRequested
 ) {
 }

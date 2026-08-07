@@ -163,10 +163,18 @@ public class OrderService {
 
 	public List<OrderSummaryResponse> findOrders(String loginId, OrderStatus statusFilter) {
 		Long memberId = activeMemberId(loginId);
-		List<OrderEntity> orders = statusFilter == null
-			? orderRepository.findByMemberIdOrderByOrderedAtDesc(memberId)
-			: orderRepository.findByMemberIdAndOrderStatusOrderByOrderedAtDesc(memberId, statusFilter);
-		return orders.stream().map(this::toSummary).toList();
+		return orderRepository.findByMemberIdOrderByOrderedAtDesc(memberId).stream()
+			.filter(order -> matchesHistoryFilter(order, statusFilter))
+			.map(this::toSummary)
+			.toList();
+	}
+
+	private boolean matchesHistoryFilter(OrderEntity order, OrderStatus statusFilter) {
+		if (statusFilter == null) return true;
+		if (statusFilter == OrderStatus.CANCELLED) {
+			return order.getOrderStatus() == OrderStatus.CANCELLED || order.isReturnRequested();
+		}
+		return !order.isReturnRequested() && order.getOrderStatus() == statusFilter;
 	}
 
 	@Transactional
@@ -186,8 +194,17 @@ public class OrderService {
 	 * 추가 불가) 실제 상태 전이 없이 소유자 확인만 하고 접수 여부만 응답한다. 반품 처리 상태를
 	 * 추적하려면 스키마에 컬럼을 추가하는 논의가 먼저 필요하다.
 	 */
+	@Transactional
 	public void requestReturn(String loginId, String orderNumber) {
-		findOwnedOrder(loginId, orderNumber);
+		OrderEntity order = findOwnedOrder(loginId, orderNumber);
+		if (order.getOrderStatus() != OrderStatus.SHIPPING && order.getOrderStatus() != OrderStatus.DELIVERED) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "배송 중이거나 배송 완료된 주문만 반품할 수 있습니다.");
+		}
+		if (order.isReturnRequested()) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 반품이 요청된 주문입니다.");
+		}
+		paymentService.refundHalfForOrder(order);
+		order.requestReturn();
 	}
 
 	/** PaymentService의 결제 승인 처리에서 소유자 확인 없이 orderNumber로 바로 찾을 때 쓴다. */
@@ -212,8 +229,8 @@ public class OrderService {
 		return new OrderSummaryResponse(
 			order.getOrderNumber(),
 			order.getOrderedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")),
-			order.getOrderStatus().name(),
-			statusLabel(order.getOrderStatus()),
+			order.isReturnRequested() ? "RETURN_COMPLETED" : order.getOrderStatus().name(),
+			order.isReturnRequested() ? "반품완료" : statusLabel(order.getOrderStatus()),
 			title,
 			order.getFinalAmount()
 		);
@@ -238,8 +255,8 @@ public class OrderService {
 		return new OrderDetailResponse(
 			order.getOrderNumber(),
 			order.getOrderedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")),
-			order.getOrderStatus().name(),
-			statusLabel(order.getOrderStatus()),
+			order.isReturnRequested() ? "RETURN_COMPLETED" : order.getOrderStatus().name(),
+			order.isReturnRequested() ? "반품완료" : statusLabel(order.getOrderStatus()),
 			groups,
 			order.getProductAmount(),
 			order.getShippingFee(),
@@ -250,7 +267,8 @@ public class OrderService {
 			order.getDeliveryRequest(),
 			payment == null ? null : paymentMethodLabel(payment.getPaymentMethod().name()),
 			payment == null ? null : payment.getPaymentAmount(),
-			order.isCancellable()
+			order.isCancellable(),
+			order.isReturnRequested()
 		);
 	}
 

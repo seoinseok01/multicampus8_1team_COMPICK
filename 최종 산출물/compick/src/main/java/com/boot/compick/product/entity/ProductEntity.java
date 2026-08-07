@@ -12,6 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Entity
 @Table(name = "PRODUCT")
@@ -88,6 +90,32 @@ public class ProductEntity {
 	protected ProductEntity() {
 	}
 
+	public ProductEntity(CategoryEntity category, String productName, String brand, String modelName) {
+		this.category = category;
+		this.productName = productName;
+		this.brand = brand;
+		this.modelName = modelName;
+		this.ratingCount = 0;
+		this.createdAt = LocalDateTime.now();
+	}
+
+	public void updateAdmin(
+		CategoryEntity category, String productName, String brand, String modelName,
+		long price, int stockQuantity, String productDescription, String imageUrl,
+		String salesStatus, String specJson
+	) {
+		this.category = category;
+		this.productName = productName;
+		this.brand = brand;
+		this.modelName = modelName;
+		this.price = price;
+		this.stockQuantity = stockQuantity;
+		this.productDescription = productDescription;
+		this.imageUrl = imageUrl;
+		this.salesStatus = salesStatus;
+		this.specJson = specJson;
+	}
+
 	public Long getProductId() {
 		return productId;
 	}
@@ -118,6 +146,18 @@ public class ProductEntity {
 
 	public int getStockQuantity() {
 		return stockQuantity;
+	}
+
+	public void decreaseStock(int quantity) {
+		if (quantity <= 0) return;
+		if (stockQuantity < quantity) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, productName + " 상품의 재고가 부족합니다.");
+		}
+		stockQuantity -= quantity;
+	}
+
+	public void increaseStock(int quantity) {
+		if (quantity > 0) stockQuantity += quantity;
 	}
 
 	public String getProductDescription() {

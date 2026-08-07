@@ -56,4 +56,8 @@ public class QuoteItemEntity {
 	public int getQuantity() {
 		return quantity;
 	}
+
+	void updateQuantity(int quantity) {
+		this.quantity = quantity;
+	}
 }

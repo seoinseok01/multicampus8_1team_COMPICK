@@ -27,4 +27,10 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
 	List<OrderEntity> findByMemberIdAndOrderStatusOrderByOrderedAtDesc(Long memberId, OrderStatus orderStatus);
 
 	long countByOrderedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+
+	@EntityGraph(attributePaths = "groups")
+	List<OrderEntity> findAllByOrderByOrderedAtDesc();
+
+	@EntityGraph(attributePaths = "groups")
+	List<OrderEntity> findTop5ByOrderByOrderedAtDesc();
 }

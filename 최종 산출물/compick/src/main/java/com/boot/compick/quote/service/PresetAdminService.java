@@ -45,17 +45,23 @@ public class PresetAdminService {
 
 	@Transactional
 	public Long createPreset(PresetUpsertRequest request) {
+		Long systemMemberId = memberService.findActiveByLoginId(SYSTEM_PRESET_LOGIN_ID).getId();
+		return createPreset(request, systemMemberId);
+	}
+
+	@Transactional
+	public Long createPreset(PresetUpsertRequest request, Long ownerMemberId) {
 		Map<Long, Integer> quantityByProductId = quantityByProductId(request.items());
 		List<ProductEntity> products = resolveProducts(quantityByProductId);
 		QuoteSelectionValidator.validate(products, quantityByProductId);
 
-		Long systemMemberId = memberService.findActiveByLoginId(SYSTEM_PRESET_LOGIN_ID).getId();
 		QuoteEntity preset = QuoteEntity.createPreset(
-			systemMemberId,
+			ownerMemberId,
 			request.quoteName(),
 			request.purposeTag(),
 			request.summaryDescription()
 		);
+		preset.updateDetails(request.quoteName(), request.purposeTag(), request.summaryDescription(), request.imageUrl());
 		quantityByProductId.forEach(preset::addItem);
 
 		return quoteRepository.save(preset).getQuoteId();
@@ -69,7 +75,7 @@ public class PresetAdminService {
 		List<ProductEntity> products = resolveProducts(quantityByProductId);
 		QuoteSelectionValidator.validate(products, quantityByProductId);
 
-		preset.updateDetails(request.quoteName(), request.purposeTag(), request.summaryDescription());
+		preset.updateDetails(request.quoteName(), request.purposeTag(), request.summaryDescription(), request.imageUrl());
 		preset.replaceItems(quantityByProductId);
 	}
 

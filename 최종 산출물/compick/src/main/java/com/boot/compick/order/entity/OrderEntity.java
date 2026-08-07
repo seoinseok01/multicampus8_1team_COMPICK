@@ -64,6 +64,15 @@ public class OrderEntity {
 	@Column(name = "delivery_request", length = 500)
 	private String deliveryRequest;
 
+	@Column(name = "return_requested_at")
+	private LocalDateTime returnRequestedAt;
+
+	@Column(name = "stock_deducted_at")
+	private LocalDateTime stockDeductedAt;
+
+	@Column(name = "stock_restored_at")
+	private LocalDateTime stockRestoredAt;
+
 	@CreationTimestamp
 	@Column(name = "ordered_at", nullable = false, updatable = false)
 	private LocalDateTime orderedAt;
@@ -161,6 +170,14 @@ public class OrderEntity {
 		this.orderStatus = OrderStatus.CANCELLED;
 	}
 
+	public void requestReturn() {
+		this.returnRequestedAt = LocalDateTime.now();
+	}
+
+	public void changeStatus(OrderStatus orderStatus) {
+		this.orderStatus = orderStatus;
+	}
+
 	public boolean isCancellable() {
 		return orderStatus == OrderStatus.PAYMENT_PENDING
 			|| orderStatus == OrderStatus.PAID
@@ -181,6 +198,30 @@ public class OrderEntity {
 
 	public OrderStatus getOrderStatus() {
 		return orderStatus;
+	}
+
+	public LocalDateTime getReturnRequestedAt() {
+		return returnRequestedAt;
+	}
+
+	public boolean isReturnRequested() {
+		return returnRequestedAt != null;
+	}
+
+	public boolean isStockDeducted() {
+		return stockDeductedAt != null;
+	}
+
+	public boolean isStockRestored() {
+		return stockRestoredAt != null;
+	}
+
+	public void markStockDeducted() {
+		stockDeductedAt = LocalDateTime.now();
+	}
+
+	public void markStockRestored() {
+		stockRestoredAt = LocalDateTime.now();
 	}
 
 	public long getProductAmount() {

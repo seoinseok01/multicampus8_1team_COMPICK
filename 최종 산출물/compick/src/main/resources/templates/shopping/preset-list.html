@@ -25,10 +25,16 @@
 
 		<section class="build-grid" aria-label="추천 견적 목록" th:if="${!#lists.isEmpty(presets)}">
 			<article class="build-card" th:each="preset : ${presets}">
+				<div class="preset-card-media" th:if="${preset.imageUrl != null and !#strings.isEmpty(preset.imageUrl)}">
+					<img class="preset-card-image" th:src="${preset.imageUrl}" alt="추천견적 이미지">
+					<span class="preset-card-purpose" th:switch="${preset.purposeTag}"><th:block th:case="'OFFICE'">사무용</th:block><th:block th:case="'GAMING'">게이밍</th:block><th:block th:case="'VIDEO_EDIT'">영상 편집</th:block><th:block th:case="'BEGINNER'">입문용</th:block><th:block th:case="*">추천 견적</th:block></span>
+				</div>
 				<div
 					class="build-card-top"
+					th:if="${preset.imageUrl == null or #strings.isEmpty(preset.imageUrl)}"
 					th:classappend="${preset.purposeTag == 'OFFICE'} ? 'office'
-						: (${preset.purposeTag == 'VIDEO_EDIT'} ? 'creator' : 'gaming')">
+						: (${preset.purposeTag == 'VIDEO_EDIT'} ? 'creator'
+						: (${preset.purposeTag == 'BEGINNER'} ? 'beginner' : 'gaming'))">
 					<span th:switch="${preset.purposeTag}">
 						<th:block th:case="'OFFICE'">사무용</th:block>
 						<th:block th:case="'GAMING'">게이밍</th:block>

@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -48,6 +50,9 @@ public class QuoteEntity {
 
 	@Column(name = "summary_description", length = 200)
 	private String summaryDescription;
+
+	@Column(name = "image_url", length = 1000)
+	private String imageUrl;
 
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false, updatable = false)
@@ -111,23 +116,27 @@ public class QuoteEntity {
 		);
 	}
 
-	public void updateDetails(String quoteName, PurposeTag purposeTag, String summaryDescription) {
+	public void updateDetails(String quoteName, PurposeTag purposeTag, String summaryDescription, String imageUrl) {
 		this.quoteName = quoteName;
 		this.purposeTag = purposeTag;
 		this.summaryDescription = summaryDescription;
+		this.imageUrl = imageUrl;
 	}
 
 	public void addItem(Long productId, int quantity) {
 		items.add(QuoteItemEntity.create(this, productId, quantity));
 	}
 
-	/**
-	 * 기존 구성 부품을 모두 비우고 새 목록으로 교체한다.
-	 * orphanRemoval=true라 clear() 시점에 기존 QUOTE_ITEM 행이 삭제된다.
-	 */
 	public void replaceItems(Map<Long, Integer> quantityByProductId) {
-		items.clear();
-		quantityByProductId.forEach(this::addItem);
+		Map<Long, QuoteItemEntity> currentItems = items.stream()
+			.collect(Collectors.toMap(QuoteItemEntity::getProductId, Function.identity()));
+
+		items.removeIf(item -> !quantityByProductId.containsKey(item.getProductId()));
+		quantityByProductId.forEach((productId, quantity) -> {
+			QuoteItemEntity item = currentItems.get(productId);
+			if (item == null) addItem(productId, quantity);
+			else item.updateQuantity(quantity);
+		});
 	}
 
 	public Long getQuoteId() {
@@ -158,7 +167,14 @@ public class QuoteEntity {
 		return summaryDescription;
 	}
 
+	public String getImageUrl() { return imageUrl; }
+
 	public List<QuoteItemEntity> getItems() {
 		return items;
 	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
 }

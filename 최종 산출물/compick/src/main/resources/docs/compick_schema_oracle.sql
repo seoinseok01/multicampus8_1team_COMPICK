@@ -201,6 +201,7 @@ CREATE TABLE QUOTE (
     assembly_type         VARCHAR2(20)  DEFAULT 'SELF' NOT NULL,
     purpose_tag           VARCHAR2(20),
     summary_description   VARCHAR2(200),
+    image_url             VARCHAR2(1000),
     created_at            TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at            TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
 
@@ -336,6 +337,9 @@ CREATE TABLE ORDERS (
     basic_address     VARCHAR2(255)  NOT NULL,
     detail_address    VARCHAR2(255),
     delivery_request  VARCHAR2(500),
+    return_requested_at TIMESTAMP,
+    stock_deducted_at TIMESTAMP,
+    stock_restored_at TIMESTAMP,
     ordered_at        TIMESTAMP      DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at        TIMESTAMP      DEFAULT SYSTIMESTAMP NOT NULL,
 

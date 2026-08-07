@@ -7,6 +7,7 @@ public record PresetDetailResponse(
 	String quoteName,
 	String purposeTag,
 	String summaryDescription,
+	String imageUrl,
 	List<QuoteItemView> items,
 	long totalPrice,
 	Integer estimatedPowerWatt

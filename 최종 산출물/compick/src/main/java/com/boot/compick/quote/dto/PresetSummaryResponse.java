@@ -7,6 +7,7 @@ public record PresetSummaryResponse(
 	String quoteName,
 	String purposeTag,
 	String summaryDescription,
+	String imageUrl,
 	long totalPrice,
 	List<String> highlightSpecs
 ) {

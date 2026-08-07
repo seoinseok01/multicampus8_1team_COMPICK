@@ -58,16 +58,6 @@
 				<small class="field-result" data-email-result></small>
 				<small class="field-error" th:errors="*{email}"></small>
 
-				<div class="field-with-button">
-					<input id="verificationCode" type="text" inputmode="numeric"
-						maxlength="6" placeholder="인증번호 6자리" autocomplete="off">
-					<button type="button" data-send-verification>인증번호 발송</button>
-				</div>
-				<div class="field-with-button">
-					<button type="button" class="secondary-button" data-confirm-verification>인증 확인</button>
-				</div>
-				<small class="field-result" data-verification-result></small>
-
 				<label for="phone">휴대전화 번호</label>
 				<input id="phone" th:field="*{phone}" type="tel"
 					placeholder="010-1234-5678" required>

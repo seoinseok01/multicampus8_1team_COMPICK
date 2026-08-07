@@ -57,7 +57,8 @@ public final class ProductSpecifications {
 		if ("HDD".equalsIgnoreCase(storageType)) {
 			return Specification
 				.where(specEquals("$.\"Type\"", "7200 RPM"))
-				.or(specEquals("$.\"Type\"", "5400 RPM"));
+				.or(specEquals("$.\"Type\"", "5400 RPM"))
+				.or(specEquals("$.\"Type\"", "HDD"));
 		}
 		return Specification.where(null);
 	}

@@ -123,4 +123,9 @@ public class PaymentEntity {
 	public String getApprovalNumber() {
 		return approvalNumber;
 	}
+
+	public LocalDateTime getApprovedAt() {
+		return approvedAt;
+	}
+
 }

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>회원 관리 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+	<div class="admin-shell">
+		<aside th:replace="~{admin/fragments :: sidebar('members')}"></aside>
+		<main class="admin-main">
+			<header class="admin-page-head"><h1>회원 관리</h1><small th:text="|전체 ${totalElements}명|"></small></header>
+			<form class="admin-toolbar" method="get">
+				<select class="admin-select" name="status"><option value="">전체 상태</option><option value="ACTIVE" th:selected="${status=='ACTIVE'}">활성</option><option value="INACTIVE" th:selected="${status=='INACTIVE'}">정지</option><option value="WITHDRAWN" th:selected="${status=='WITHDRAWN'}">탈퇴</option></select>
+				<select class="admin-select" name="role"><option value="">전체 등급</option><option value="USER" th:selected="${role=='USER'}">일반</option><option value="ADMIN" th:selected="${role=='ADMIN'}">관리자</option></select>
+				<input class="admin-input" name="keyword" th:value="${keyword}" placeholder="아이디, 이름, 이메일 검색">
+				<button class="admin-button" type="submit">검색</button>
+			</form>
+			<div class="admin-table-wrap">
+				<table class="admin-table">
+					<thead><tr><th>아이디</th><th>이름</th><th>이메일</th><th>등급</th><th>상태</th><th>가입일</th><th>관리</th></tr></thead>
+					<tbody><tr th:each="member:${members}"><td th:text="${member.loginId}"></td><td th:text="${member.name}"></td><td th:text="${member.email}"></td><td><span class="admin-badge" th:text="${member.role=='ADMIN'?'관리자':'일반'}"></span></td><td><span class="admin-badge" th:classappend="${member.status}" th:text="${member.status}"></span></td><td th:text="${#temporals.format(member.createdAt,'yyyy.MM.dd')}"></td><td><a class="admin-link" th:href="@{/admin/members/{id}(id=${member.id})}">상세</a></td></tr></tbody>
+				</table>
+			</div>
+			<nav class="admin-pagination" th:if="${totalPages > 1}" aria-label="회원 목록 페이지">
+				<a th:classappend="${currentPage == 1}?' is-disabled'" th:href="@{/admin/members(page=${currentPage-1},keyword=${keyword},role=${role},status=${status})}">이전</a>
+				<a th:each="number:${pageNumbers}" th:classappend="${number == currentPage}?' is-active'" th:text="${number}" th:href="@{/admin/members(page=${number},keyword=${keyword},role=${role},status=${status})}"></a>
+				<a th:classappend="${currentPage == totalPages}?' is-disabled'" th:href="@{/admin/members(page=${currentPage+1},keyword=${keyword},role=${role},status=${status})}">다음</a>
+			</nav>
+		</main>
+	</div>
+</body>
+</html>

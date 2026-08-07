@@ -18,6 +18,7 @@ public record PresetUpsertRequest(
 	@NotBlank String quoteName,
 	PurposeTag purposeTag,
 	String summaryDescription,
+	String imageUrl,
 	@NotEmpty @Valid List<PresetItem> items
 ) {
 

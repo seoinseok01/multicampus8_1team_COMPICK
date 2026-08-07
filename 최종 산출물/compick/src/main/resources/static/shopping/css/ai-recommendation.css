@@ -41,10 +41,6 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-main-card h2 { margin: 24px 0 8px; font-size: 20px; }
 .loading-main-card > p, .loading-summary-card > span { color: var(--color-text-muted); font-size: 13px; }
-.loading-steps { display: grid; gap: 8px; width: 100%; margin: 22px 0 0; padding: 0; list-style: none; text-align: left; }
-.loading-steps li { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 7px; background: #f6f8fb; color: var(--color-text-muted); font-size: 12px; }
-.loading-steps .done { background: #ecfbf2; color: #16834f; }
-.loading-steps .active { background: #edf4ff; color: var(--color-primary); }
 .loading-summary-card > b { font-size: 13px; }
 #loading-request, .original-request { min-height: 76px; margin: 14px 0 28px; padding: 16px; border-radius: 8px; background: #edf4ff; font-size: 13px; }
 .loading-summary-card h2 { margin: 0 0 8px; font-size: 19px; }

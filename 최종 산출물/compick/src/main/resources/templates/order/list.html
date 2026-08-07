@@ -32,7 +32,7 @@
 				</div>
 				<span
 					class="order-card-status"
-					th:classappend="${order.status == 'CANCELLED'} ? 'is-cancelled' : (${order.status == 'PAID' or order.status == 'DELIVERED'} ? 'is-paid' : '')"
+					th:classappend="${order.status == 'CANCELLED' or order.status == 'RETURN_COMPLETED'} ? 'is-cancelled' : (${order.status == 'PAID' or order.status == 'DELIVERED'} ? 'is-paid' : '')"
 					th:text="${order.statusLabel}">
 					결제 완료
 				</span>

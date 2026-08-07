@@ -1,24 +1,15 @@
 package com.boot.compick.member.repository;
 
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import com.boot.compick.member.entity.SocialAccount;
 import com.boot.compick.member.entity.SocialProvider;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 
-public interface SocialAccountRepository
-	extends JpaRepository<SocialAccount, Long> {
+import java.util.Optional;
 
-	Optional<SocialAccount> findByProviderAndProviderUserId(
-		SocialProvider provider,
-		String providerUserId
-	);
-
-	Optional<SocialAccount> findByMemberIdAndProvider(
-		Long memberId,
-		SocialProvider provider
-	);
-
-	long deleteByMemberId(Long memberId);
+public interface SocialAccountRepository extends JpaRepository<SocialAccount, Long> {
+	@EntityGraph(attributePaths = "member")
+    Optional<SocialAccount> findByProviderAndProviderUserId(SocialProvider provider, String providerUserId);
+    Optional<SocialAccount> findByMemberIdAndProvider(Long memberId, SocialProvider provider);
+    long deleteByMemberId(Long memberId);
 }

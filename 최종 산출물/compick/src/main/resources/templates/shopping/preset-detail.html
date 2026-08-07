@@ -20,6 +20,7 @@
 		</section>
 
 		<div class="preset-detail-layout">
+			<img class="preset-detail-image" th:if="${preset.imageUrl != null and !#strings.isEmpty(preset.imageUrl)}" th:src="${preset.imageUrl}" alt="추천견적 대표 이미지">
 			<section class="preset-detail-parts">
 				<h2>구성 부품</h2>
 				<ul class="preset-part-list">

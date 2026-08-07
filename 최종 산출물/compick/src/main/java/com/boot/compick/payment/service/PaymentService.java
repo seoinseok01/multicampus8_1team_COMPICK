@@ -15,8 +15,12 @@ import com.boot.compick.payment.entity.PaymentEntity;
 import com.boot.compick.payment.entity.PaymentMethod;
 import com.boot.compick.payment.entity.PaymentStatus;
 import com.boot.compick.payment.repository.PaymentRepository;
+import com.boot.compick.product.entity.ProductEntity;
+import com.boot.compick.product.repository.ProductRepository;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,17 +30,20 @@ public class PaymentService {
 	private final PaymentRepository paymentRepository;
 	private final TossPaymentService tossPaymentService;
 	private final CartService cartService;
+	private final ProductRepository productRepository;
 
 	public PaymentService(
 		OrderRepository orderRepository,
 		PaymentRepository paymentRepository,
 		TossPaymentService tossPaymentService,
-		CartService cartService
+		CartService cartService,
+		ProductRepository productRepository
 	) {
 		this.orderRepository = orderRepository;
 		this.paymentRepository = paymentRepository;
 		this.tossPaymentService = tossPaymentService;
 		this.cartService = cartService;
+		this.productRepository = productRepository;
 	}
 
 	public boolean isTossConfigured() {
@@ -54,6 +61,7 @@ public class PaymentService {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "결제 금액이 주문 금액과 일치하지 않습니다.");
 		}
 
+		decreaseOrderStock(order);
 		Map<String, Object> confirmed = tossPaymentService.confirm(paymentKey, orderNumber, amount);
 
 		PaymentEntity payment = paymentRepository.findByOrderId(order.getOrderId())
@@ -75,6 +83,66 @@ public class PaymentService {
 		}
 		tossPaymentService.cancel(payment.getExternalTransactionId(), "고객 요청에 의한 주문 취소");
 		payment.cancel();
+		restoreOrderStock(order);
+	}
+
+	@Transactional
+	public void refundHalfForOrder(OrderEntity order) {
+		PaymentEntity payment = paymentRepository.findByOrderId(order.getOrderId()).orElse(null);
+		if (payment == null || payment.getPaymentStatus() != PaymentStatus.APPROVED) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "환불할 결제 정보를 찾을 수 없습니다.");
+		}
+		long refundAmount = order.getFinalAmount() / 2;
+		long balanceAmount = tossPaymentService.balanceAmount(payment.getExternalTransactionId());
+		long alreadyRefunded = Math.max(0, payment.getPaymentAmount() - balanceAmount);
+		long remainingRefund = Math.max(0, refundAmount - alreadyRefunded);
+		if (remainingRefund > 0) {
+			tossPaymentService.cancel(payment.getExternalTransactionId(), "배송 상품 반품 요청", remainingRefund);
+		}
+		payment.cancel();
+		restoreOrderStock(order);
+	}
+
+	private void decreaseOrderStock(OrderEntity order) {
+		if (order.isStockDeducted()) {
+			return;
+		}
+		Map<Long, Integer> quantities = orderProductQuantities(order);
+		Map<Long, ProductEntity> productMap = productsById(quantities);
+		if (productMap.size() != quantities.size()) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "주문 상품을 찾을 수 없습니다.");
+		}
+		quantities.forEach((productId, quantity) -> productMap.get(productId).decreaseStock(quantity));
+		order.markStockDeducted();
+	}
+
+	private void restoreOrderStock(OrderEntity order) {
+		if (!order.isStockDeducted() || order.isStockRestored()) {
+			return;
+		}
+		Map<Long, Integer> quantities = orderProductQuantities(order);
+		Map<Long, ProductEntity> productMap = productsById(quantities);
+		quantities.forEach((productId, quantity) -> {
+			ProductEntity product = productMap.get(productId);
+			if (product != null) {
+				product.increaseStock(quantity);
+			}
+		});
+		order.markStockRestored();
+	}
+
+	private Map<Long, ProductEntity> productsById(Map<Long, Integer> quantities) {
+		return productRepository.findAllById(quantities.keySet()).stream()
+			.collect(Collectors.toMap(ProductEntity::getProductId, product -> product));
+	}
+
+	private Map<Long, Integer> orderProductQuantities(OrderEntity order) {
+		Map<Long, Integer> quantities = new LinkedHashMap<>();
+		for (OrderGroupEntity group : order.getGroups()) {
+			int groupMultiplier = group.getGroupType() == OrderGroupType.QUOTE ? group.getGroupQuantity() : 1;
+			group.getItems().forEach(item -> quantities.merge(item.getProductId(), item.getQuantity() * groupMultiplier, Integer::sum));
+		}
+		return quantities;
 	}
 
 	private void clearOrderedCartItems(String loginId, OrderEntity order) {

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>AI 추천 로그 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body>
+	<div class="admin-shell">
+		<aside th:replace="~{admin/fragments :: sidebar('ai')}"></aside>
+		<main class="admin-main">
+			<header class="admin-page-head">
+				<h1>AI 추천 로그</h1>
+				<small th:text="|읽기 전용 · 총 ${#lists.size(logs)}건|"></small>
+			</header>
+			<div class="admin-table-wrap">
+				<table class="admin-table admin-ai-table">
+					<colgroup><col class="ai-date-col"><col class="ai-member-col"><col class="ai-request-col"><col class="ai-quote-col"><col class="ai-manage-col"></colgroup>
+					<thead><tr><th>요청일시</th><th>회원</th><th>요청 내용</th><th>생성된 견적</th><th>관리</th></tr></thead>
+					<tbody><tr th:each="log:${logs}">
+						<td th:text="${#temporals.format(log.recommendation.quote.createdAt,'MM.dd HH:mm')}"></td>
+						<td th:text="${log.member==null?'탈퇴 회원':log.member.name}"></td>
+						<td class="admin-log-text" th:text="${log.recommendation.userRequirements}"></td>
+						<td th:text="${log.recommendation.quote.quoteName}"></td>
+						<td class="admin-ai-manage"><details><summary class="admin-link">상세</summary><pre th:text="${log.formattedAnswer}"></pre></details></td>
+					</tr></tbody>
+				</table>
+			</div>
+			<p class="admin-empty" th:if="${#lists.isEmpty(logs)}">AI 추천 기록이 없습니다.</p>
+		</main>
+	</div>
+</body>
+</html>

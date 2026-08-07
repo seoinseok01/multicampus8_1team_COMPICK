@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +20,14 @@
 			<div th:replace="~{fragments/mypage-sidebar :: mypageSidebar('profile')}"></div>
 
 			<div class="mypage-content">
+				<section class="admin-access-card" sec:authorize="hasRole('ADMIN')">
+					<div>
+						<strong>관리자 권한으로 로그인 중입니다.</strong>
+						<p>회원, 상품, 추천견적과 주문 정보를 관리할 수 있습니다.</p>
+					</div>
+					<a class="admin-access-button" th:href="@{/admin}">관리자 페이지로 이동</a>
+				</section>
+
 				<section class="profile-card">
 					<div class="profile-avatar" th:text="${#strings.substring(member.nickname(), 0, 1)}">C</div>
 					<div class="profile-card-body">

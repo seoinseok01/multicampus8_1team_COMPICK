@@ -132,6 +132,7 @@ public class QuoteService {
 			quote.getQuoteName(),
 			quote.getPurposeTag() == null ? null : quote.getPurposeTag().name(),
 			quote.getSummaryDescription(),
+			quote.getImageUrl(),
 			items,
 			totalPrice(items),
 			estimatedPowerWatt(quote.getItems(), productsById)
@@ -220,6 +221,7 @@ public class QuoteService {
 			quote.getQuoteName(),
 			quote.getPurposeTag() == null ? null : quote.getPurposeTag().name(),
 			quote.getSummaryDescription(),
+			quote.getImageUrl(),
 			totalPrice(items),
 			highlights
 		);
