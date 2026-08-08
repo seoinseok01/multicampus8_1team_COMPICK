@@ -54,6 +54,27 @@
                         </a>
                     </article>
                     <h2>
+                        내 최근 AI 견적 이력
+                    </h2>
+                    <article class="card ai-history-card" th:if="${!recentAiQuotes.isEmpty()}">
+                        <ul class="ai-history-list">
+                            <li th:each="quote : ${recentAiQuotes}">
+                                <div>
+                                    <strong th:text="${quote.quoteName}"></strong>
+                                    <p class="muted" th:if="${!#lists.isEmpty(quote.highlightSpecs)}" th:text="${#strings.listJoin(quote.highlightSpecs, ' · ')}"></p>
+                                    <span th:text="|${#numbers.formatInteger(quote.totalPrice, 0, 'COMMA')}원|"></span>
+                                </div>
+                                <a class="secondary button" th:href="@{/quotes/new(basedOn=${quote.quoteId})}">불러오기</a>
+                            </li>
+                        </ul>
+                    </article>
+                    <article class="card" th:if="${recentAiQuotes.isEmpty()}">
+                        <p class="muted">
+                            아직 AI 추천을 받은 적이 없어요.
+                        </p>
+                        <a class="secondary button" th:href="@{/ai-quotes}">AI로 견적 추천받기</a>
+                    </article>
+                    <h2>
                         최근 주문
                     </h2>
                     <article class="card">

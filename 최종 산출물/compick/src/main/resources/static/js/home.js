@@ -145,6 +145,116 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	});
 
+	const CATEGORY_LABELS = {
+		CPU: "CPU",
+		CPU_COOLER: "CPU 쿨러",
+		MAINBOARD: "메인보드",
+		RAM: "RAM",
+		GPU: "그래픽카드",
+		STORAGE: "저장장치",
+		POWER_SUPPLY: "파워",
+		CASE: "케이스"
+	};
+
+	const highlightDialog = document.querySelector("#ai-highlight-dialog");
+	if (highlightDialog) {
+		const closeHighlightButton = highlightDialog.querySelector(".dialog-close-button");
+		const cta = highlightDialog.querySelector("[data-dialog-cta]");
+
+		const openHighlightDialog = (card) => {
+			const requirement = card.querySelector(".ai-highlight-requirement")?.textContent ?? "";
+			const explanation = card.querySelector(".ai-highlight-explanation")?.textContent ?? "";
+			const price = card.querySelector(".ai-highlight-price")?.textContent ?? "";
+			const items = Array.from(card.querySelectorAll(".ai-highlight-items li"));
+
+			highlightDialog.querySelector("[data-dialog-requirement]").textContent = requirement;
+			const explanationElement = highlightDialog.querySelector("[data-dialog-explanation]");
+			explanationElement.textContent = explanation;
+			explanationElement.hidden = explanation === "";
+			highlightDialog.querySelector("[data-dialog-price]").textContent = price;
+
+			const itemsList = highlightDialog.querySelector("[data-dialog-items]");
+			itemsList.innerHTML = "";
+			items.forEach((item) => {
+				const row = document.createElement("li");
+				const label = document.createElement("span");
+				label.textContent = CATEGORY_LABELS[item.dataset.category] ?? item.dataset.category;
+				const name = document.createElement("span");
+				name.textContent = item.textContent;
+				const itemPrice = document.createElement("span");
+				itemPrice.textContent = formatPrice(item.dataset.price);
+				row.append(label, name, itemPrice);
+				itemsList.appendChild(row);
+			});
+
+			const params = new URLSearchParams();
+			items.forEach((item) => params.append("productId", item.dataset.productId));
+			cta.href = `/quotes/new?${params.toString()}`;
+
+			highlightDialog.showModal();
+		};
+
+		document.querySelectorAll(".ai-highlight-card").forEach((card) => {
+			card.addEventListener("click", () => openHighlightDialog(card));
+			card.addEventListener("keydown", (event) => {
+				if (event.key === "Enter" || event.key === " ") {
+					event.preventDefault();
+					openHighlightDialog(card);
+				}
+			});
+		});
+
+		closeHighlightButton?.addEventListener("click", () => highlightDialog.close());
+		highlightDialog.addEventListener("click", (event) => {
+			const bounds = highlightDialog.getBoundingClientRect();
+			const clickedOutside =
+				event.clientX < bounds.left ||
+				event.clientX > bounds.right ||
+				event.clientY < bounds.top ||
+				event.clientY > bounds.bottom;
+
+			if (clickedOutside) {
+				highlightDialog.close();
+			}
+		});
+	}
+
+	const highlightTrack = document.querySelector(".ai-highlight-track");
+	if (highlightTrack) {
+		const prevButton = document.querySelector(".ai-highlight-nav.prev");
+		const nextButton = document.querySelector(".ai-highlight-nav.next");
+		const AUTO_ADVANCE_MS = 4000;
+		let autoAdvanceTimer = null;
+
+		const cardScrollStep = () => {
+			const card = highlightTrack.querySelector(".ai-highlight-card");
+			const gap = parseFloat(getComputedStyle(highlightTrack).columnGap) || 0;
+			return card ? card.getBoundingClientRect().width + gap : highlightTrack.clientWidth;
+		};
+
+		const scrollByCard = (direction) => {
+			const maxScroll = highlightTrack.scrollWidth - highlightTrack.clientWidth;
+			const next = highlightTrack.scrollLeft + direction * cardScrollStep();
+			highlightTrack.scrollTo({
+				left: next < 0 ? maxScroll : next > maxScroll ? 0 : next,
+				behavior: "smooth"
+			});
+		};
+
+		const stopAutoAdvance = () => window.clearInterval(autoAdvanceTimer);
+		const startAutoAdvance = () => {
+			stopAutoAdvance();
+			autoAdvanceTimer = window.setInterval(() => scrollByCard(1), AUTO_ADVANCE_MS);
+		};
+
+		prevButton?.addEventListener("click", () => scrollByCard(-1));
+		nextButton?.addEventListener("click", () => scrollByCard(1));
+		highlightTrack.addEventListener("mouseenter", stopAutoAdvance);
+		highlightTrack.addEventListener("mouseleave", startAutoAdvance);
+
+		startAutoAdvance();
+	}
+
 	closeButton?.addEventListener("click", () => dialog.close());
 	dialogCartButton?.addEventListener("click", () => {
 		addToCart(selectedProductId, dialogCartButton);

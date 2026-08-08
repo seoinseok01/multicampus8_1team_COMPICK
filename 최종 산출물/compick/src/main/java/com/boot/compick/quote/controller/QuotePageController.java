@@ -29,7 +29,7 @@ public class QuotePageController {
 	@GetMapping("/quotes/new")
 	public String newQuote(
 		@RequestParam(required = false) Long basedOn,
-		@RequestParam(required = false) Long productId,
+		@RequestParam(required = false) List<Long> productId,
 		Principal principal,
 		Model model
 	) {
@@ -52,13 +52,13 @@ public class QuotePageController {
 		return "shopping/preset-detail";
 	}
 
-	private List<QuoteItemView> initialItems(Long basedOn, Long productId, Principal principal) {
+	private List<QuoteItemView> initialItems(Long basedOn, List<Long> productIds, Principal principal) {
 		if (basedOn != null) {
 			String loginId = principal == null ? null : principal.getName();
 			return quoteService.findQuoteItemsForEditing(basedOn, loginId);
 		}
-		if (productId != null) {
-			return List.of(quoteService.findProductAsQuoteItem(productId));
+		if (productIds != null && !productIds.isEmpty()) {
+			return productIds.stream().map(quoteService::findProductAsQuoteItem).toList();
 		}
 		return List.of();
 	}

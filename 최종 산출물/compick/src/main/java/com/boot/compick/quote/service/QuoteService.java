@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,16 +18,21 @@ import com.boot.compick.member.service.MemberService;
 import com.boot.compick.product.SpecJsonSupport;
 import com.boot.compick.product.entity.ProductEntity;
 import com.boot.compick.product.repository.ProductRepository;
+import com.boot.compick.quote.dto.AiHighlightResponse;
 import com.boot.compick.quote.dto.CartQuoteItemResponse;
 import com.boot.compick.quote.dto.PresetDetailResponse;
 import com.boot.compick.quote.dto.PresetSummaryResponse;
 import com.boot.compick.quote.dto.QuoteBuildRequest;
 import com.boot.compick.quote.dto.QuoteItemView;
+import com.boot.compick.quote.entity.AiRecommendationEntity;
 import com.boot.compick.quote.entity.PurposeTag;
 import com.boot.compick.quote.entity.QuoteEntity;
 import com.boot.compick.quote.entity.QuoteItemEntity;
 import com.boot.compick.quote.entity.QuoteType;
+import com.boot.compick.quote.repository.AiRecommendationRepository;
 import com.boot.compick.quote.repository.QuoteRepository;
+import com.boot.compick.shopping.recommendation.dto.AiRecommendationResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @Transactional(readOnly = true)
@@ -39,19 +45,25 @@ public class QuoteService {
 	private final CartRepository cartRepository;
 	private final CartQuoteItemRepository cartQuoteItemRepository;
 	private final MemberService memberService;
+	private final AiRecommendationRepository aiRecommendationRepository;
+	private final ObjectMapper objectMapper;
 
 	public QuoteService(
 		QuoteRepository quoteRepository,
 		ProductRepository productRepository,
 		CartRepository cartRepository,
 		CartQuoteItemRepository cartQuoteItemRepository,
-		MemberService memberService
+		MemberService memberService,
+		AiRecommendationRepository aiRecommendationRepository,
+		ObjectMapper objectMapper
 	) {
 		this.quoteRepository = quoteRepository;
 		this.productRepository = productRepository;
 		this.cartRepository = cartRepository;
 		this.cartQuoteItemRepository = cartQuoteItemRepository;
 		this.memberService = memberService;
+		this.aiRecommendationRepository = aiRecommendationRepository;
+		this.objectMapper = objectMapper;
 	}
 
 	@Transactional
@@ -137,6 +149,72 @@ public class QuoteService {
 			totalPrice(items),
 			estimatedPowerWatt(quote.getItems(), productsById)
 		);
+	}
+
+	/** 메인페이지 AI 추천 배너용. 최근 AI 추천 결과를 회원 신원 없이 최신순으로 반환한다. */
+	public List<AiHighlightResponse> findRecentAiHighlights(int limit) {
+		List<AiRecommendationEntity> recommendations = aiRecommendationRepository
+			.findAllByOrderByAiRecommendationIdDesc(PageRequest.of(0, limit));
+		if (recommendations.isEmpty()) {
+			return List.of();
+		}
+
+		List<Long> quoteIds = recommendations.stream()
+			.map(recommendation -> recommendation.getQuote().getQuoteId())
+			.toList();
+		Map<Long, QuoteEntity> quotesById = quoteRepository.findByQuoteIdIn(quoteIds).stream()
+			.collect(Collectors.toMap(QuoteEntity::getQuoteId, quote -> quote));
+
+		Map<Long, ProductEntity> productsById = productsById(quotesById.values().stream()
+			.flatMap(quote -> quote.getItems().stream())
+			.toList());
+
+		return recommendations.stream()
+			.map(recommendation -> toHighlight(recommendation, quotesById, productsById))
+			.filter(highlight -> highlight != null)
+			.toList();
+	}
+
+	/** 마이페이지 "내 최근 AI 견적 이력"용. */
+	public List<PresetSummaryResponse> findRecentAiQuotes(String loginId, int limit) {
+		Long memberId = memberService.findActiveByLoginId(loginId).getId();
+		List<QuoteEntity> quotes = quoteRepository.findByMemberIdAndQuoteTypeOrderByCreatedAtDesc(
+			memberId,
+			QuoteType.AI,
+			PageRequest.of(0, limit)
+		);
+		return quotes.stream().map(this::toSummary).toList();
+	}
+
+	private AiHighlightResponse toHighlight(
+		AiRecommendationEntity recommendation,
+		Map<Long, QuoteEntity> quotesById,
+		Map<Long, ProductEntity> productsById
+	) {
+		QuoteEntity quote = quotesById.get(recommendation.getQuote().getQuoteId());
+		if (quote == null) {
+			return null;
+		}
+
+		List<QuoteItemView> items = toItemViews(quote.getItems(), productsById);
+		if (items.isEmpty()) {
+			return null;
+		}
+
+		return new AiHighlightResponse(
+			recommendation.getUserRequirements(),
+			explanationOf(recommendation.getAiAnswerJson()),
+			items,
+			totalPrice(items)
+		);
+	}
+
+	private String explanationOf(String aiAnswerJson) {
+		try {
+			return objectMapper.readValue(aiAnswerJson, AiRecommendationResponse.class).explanation();
+		} catch (Exception ignored) {
+			return null;
+		}
 	}
 
 	/**

@@ -46,6 +46,14 @@
 .actions { display: flex; justify-content: flex-end; gap: 18px; }
 .actions > * { width: 190px; }
 .mypage-grid { display: grid; grid-template-columns: 220px 1fr; gap: 34px; }
+.ai-history-card { padding: 8px 28px; }
+.ai-history-list { margin: 0; padding: 0; list-style: none; }
+.ai-history-list li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--color-border); }
+.ai-history-list li:last-child { border-bottom: 0; }
+.ai-history-list strong { display: block; margin-bottom: 4px; font-size: 16px; }
+.ai-history-list .muted { margin: 0 0 4px; font-size: 13px; }
+.ai-history-list span { color: var(--color-primary); font-weight: 600; }
+.ai-history-list a.button { flex: none; height: 40px; padding: 0 18px; }
 .side-menu { min-height: 620px; padding: 24px 16px; border-radius: 14px; background: var(--color-surface); }
 .side-menu h2 { margin: 5px 8px 28px; }
 .side-menu a { display: block; margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: 8px; background: #fff; font-size: 14px; }

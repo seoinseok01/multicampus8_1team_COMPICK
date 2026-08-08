@@ -5,19 +5,25 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.boot.compick.product.service.ProductService;
+import com.boot.compick.quote.service.QuoteService;
 
 @Controller
 public class HomeController {
 
-	private final ProductService productService;
+	private static final int AI_HIGHLIGHT_LIMIT = 8;
 
-	public HomeController(ProductService productService) {
+	private final ProductService productService;
+	private final QuoteService quoteService;
+
+	public HomeController(ProductService productService, QuoteService quoteService) {
 		this.productService = productService;
+		this.quoteService = quoteService;
 	}
 
 	@GetMapping("/")
 	public String home(Model model) {
 		model.addAttribute("popularProducts", productService.findPopularProducts());
+		model.addAttribute("aiHighlights", quoteService.findRecentAiHighlights(AI_HIGHLIGHT_LIMIT));
 		return "home/index";
 	}
 }

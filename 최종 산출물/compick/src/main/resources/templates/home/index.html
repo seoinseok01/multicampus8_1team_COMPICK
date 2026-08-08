@@ -16,7 +16,6 @@
 
 	<main>
 		<section class="home-intro" aria-labelledby="home-title">
-			<p>COMPICK</p>
 			<h1 id="home-title">내게 맞는 PC를 더 쉽게</h1>
 			<p>부품을 직접 고르거나, 완성 견적과 AI 추천으로 시작하세요.</p>
 		</section>
@@ -34,6 +33,42 @@
 				직접 고르기 어렵다면 추천 견적 둘러보기 &rarr;
 			</a>
 		</section>
+
+		<section class="ai-highlight" aria-labelledby="ai-highlight-title" th:if="${!#lists.isEmpty(aiHighlights)}">
+			<h2 id="ai-highlight-title">방금 AI가 추천한 견적</h2>
+			<p class="ai-highlight-subtitle">실제 이용자가 AI에게 받은 견적을 둘러보세요.</p>
+
+			<div class="ai-highlight-viewport">
+				<button type="button" class="ai-highlight-nav prev" aria-label="이전 추천 보기">&lsaquo;</button>
+				<ul class="ai-highlight-track">
+					<li class="ai-highlight-card" th:each="highlight : ${aiHighlights}" tabindex="0" role="button" aria-haspopup="dialog">
+						<p class="ai-highlight-requirement" th:text="|&ldquo;${highlight.requirement}&rdquo;|"></p>
+						<p class="ai-highlight-explanation" th:if="${highlight.explanation != null and !#strings.isEmpty(highlight.explanation)}" th:text="${highlight.explanation}"></p>
+						<ul class="ai-highlight-items">
+							<li th:each="item : ${highlight.items}" th:text="${item.name}"
+								th:data-product-id="${item.productId}"
+								th:data-category="${item.category}"
+								th:data-price="${item.price}"></li>
+						</ul>
+						<strong class="ai-highlight-price" th:text="|${#numbers.formatInteger(highlight.totalPrice, 0, 'COMMA')}원|"></strong>
+					</li>
+				</ul>
+				<button type="button" class="ai-highlight-nav next" aria-label="다음 추천 보기">&rsaquo;</button>
+			</div>
+
+			<a class="ai-highlight-cta" th:href="@{/ai-quotes}">나도 AI로 견적 추천받기 &rarr;</a>
+		</section>
+
+		<dialog id="ai-highlight-dialog" class="ai-highlight-dialog" aria-labelledby="ai-highlight-dialog-title">
+			<button type="button" class="dialog-close-button" aria-label="추천 견적 상세 닫기">&times;</button>
+			<p class="ai-highlight-dialog-requirement" id="ai-highlight-dialog-title" data-dialog-requirement></p>
+			<p class="ai-highlight-dialog-explanation" data-dialog-explanation></p>
+			<ul class="ai-highlight-dialog-items" data-dialog-items></ul>
+			<div class="ai-highlight-dialog-footer">
+				<strong data-dialog-price></strong>
+				<a class="dialog-add-cart-button" data-dialog-cta th:href="@{/quotes/new}">이 견적으로 만들기</a>
+			</div>
+		</dialog>
 
 		<section class="popular-products" aria-labelledby="popular-products-title">
 			<h2 id="popular-products-title">인기 부품</h2>

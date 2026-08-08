@@ -8,6 +8,7 @@ import com.boot.compick.member.service.MemberService;
 import com.boot.compick.member.service.SocialAccountService;
 import com.boot.compick.member.service.EmailVerificationService;
 import com.boot.compick.member.security.CompickOidcUser;
+import com.boot.compick.quote.service.QuoteService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class MemberController {
     private final AddressService addressService;
     private final SocialAccountService socialAccountService;
     private final EmailVerificationService emailVerificationService;
+    private final QuoteService quoteService;
     private final AuthenticationManager authenticationManager;
     private final ObjectProvider<ClientRegistrationRepository> clientRegistrations;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
@@ -128,6 +130,7 @@ public class MemberController {
                 "phoneMissing",
                 phone == null || phone.isBlank() || "미등록".equals(phone));
         model.addAttribute("addresses", addressService.findAll(authentication.getName()));
+        model.addAttribute("recentAiQuotes", quoteService.findRecentAiQuotes(authentication.getName(), 5));
         return "member/mypage";
     }
 
