@@ -34,8 +34,8 @@ public final class AdminPrivacyMasking {
 		return digits.substring(0, 3) + "-****-" + digits.substring(digits.length() - 4);
 	}
 
-	/** 시/도·구/군까지만 보여주고 나머지 상세 주소는 가린다. */
-	public static String maskAddress(String basicAddress) {
+	/** 시/도·구/군까지만 남기고 나머지 상세 주소는 잘라낸다. */
+	public static String maskAddressRegion(String basicAddress) {
 		if (basicAddress == null || basicAddress.isBlank()) {
 			return basicAddress;
 		}
@@ -48,6 +48,12 @@ public final class AdminPrivacyMasking {
 			}
 			region.append(parts[i]);
 		}
-		return region + " 이하 비공개";
+		return region.toString();
+	}
+
+	/** 배송지 섹션처럼 "이 상세 주소는 가려져 있다"는 걸 명시해야 할 때 쓴다. */
+	public static String maskAddress(String basicAddress) {
+		String region = maskAddressRegion(basicAddress);
+		return region == null ? null : region + " 이하 비공개";
 	}
 }
