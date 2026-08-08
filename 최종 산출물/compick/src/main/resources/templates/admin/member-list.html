@@ -20,7 +20,7 @@
 			<div class="admin-table-wrap">
 				<table class="admin-table">
 					<thead><tr><th>아이디</th><th>이름</th><th>이메일</th><th>등급</th><th>상태</th><th>가입일</th><th>관리</th></tr></thead>
-					<tbody><tr th:each="member:${members}"><td th:text="${member.loginId}"></td><td th:text="${member.name}"></td><td th:text="${member.email}"></td><td><span class="admin-badge" th:text="${member.role=='ADMIN'?'관리자':'일반'}"></span></td><td><span class="admin-badge" th:classappend="${member.status}" th:text="${member.status}"></span></td><td th:text="${#temporals.format(member.createdAt,'yyyy.MM.dd')}"></td><td><a class="admin-link" th:href="@{/admin/members/{id}(id=${member.id})}">상세</a></td></tr></tbody>
+					<tbody><tr th:each="member:${members}"><td th:text="${member.loginId}"></td><td th:text="${member.name}"></td><td th:text="${T(com.boot.compick.admin.AdminPrivacyMasking).maskEmail(member.email)}"></td><td><span class="admin-badge" th:text="${member.role=='ADMIN'?'관리자':'일반'}"></span></td><td><span class="admin-badge" th:classappend="${member.status}" th:text="${member.status}"></span></td><td th:text="${#temporals.format(member.createdAt,'yyyy.MM.dd')}"></td><td><a class="admin-link" th:href="@{/admin/members/{id}(id=${member.id})}">상세</a></td></tr></tbody>
 				</table>
 			</div>
 			<nav class="admin-pagination" th:if="${totalPages > 1}" aria-label="회원 목록 페이지">
