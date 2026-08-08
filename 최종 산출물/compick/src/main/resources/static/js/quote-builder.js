@@ -95,6 +95,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	const RAM_CATEGORY = "RAM";
 	const MAINBOARD_CATEGORY = "MAINBOARD";
 	const STORAGE_CATEGORY = "STORAGE";
+	const CASE_CATEGORY = "CASE";
+	const HDD_FORM_FACTOR = "3.5\"";
 	// RAM과 저장장치(SSD/HDD)는 여러 개를 함께 담을 수 있다. 그 외 카테고리는 1개만 선택한다.
 	const MULTI_SELECT_CATEGORIES = new Set([RAM_CATEGORY, STORAGE_CATEGORY]);
 	const isMultiSelectCategory = (categoryName) => MULTI_SELECT_CATEGORIES.has(categoryName);
@@ -308,22 +310,38 @@ document.addEventListener("DOMContentLoaded", () => {
 	const multiTotalQuantity = (category) =>
 		(selected[category] || []).reduce((sum, item) => sum + item.quantity, 0);
 
-	// RAM은 메인보드 슬롯 수에 따른 상한이 있다. 그 외 다중 선택 카테고리(저장장치)는 상한이 없다.
-	const checkMultiSelectLimit = (category, additionalQuantity) => {
-		if (category !== RAM_CATEGORY) {
-			return true;
+	// 케이스에 꽂을 수 있는 3.5인치 저장장치(HDD) 개수. 케이스를 아직 안 골랐으면 제한 없음(null).
+	const hddBayLimit = () => {
+		const bays = parseInt(selected.CASE?.specs?.[CASE_BAY_SPEC_KEY], 10);
+		return Number.isNaN(bays) ? null : bays;
+	};
+	const hddTotalQuantity = () =>
+		(selected.STORAGE || [])
+			.filter((item) => item.formFactor === HDD_FORM_FACTOR)
+			.reduce((sum, item) => sum + item.quantity, 0);
+
+	// RAM은 메인보드 슬롯 수, 3.5인치 HDD는 케이스 베이 수에 따른 상한이 있다.
+	const checkMultiSelectLimit = (category, item, additionalQuantity) => {
+		if (category === RAM_CATEGORY) {
+			const maxProducts = ramProductLimit();
+			if (maxProducts != null && multiTotalQuantity(RAM_CATEGORY) + additionalQuantity > maxProducts) {
+				window.alert(`이 메인보드는 RAM 상품을 최대 ${maxProducts}개까지 선택할 수 있습니다. (상품 1개당 RAM 2개 구성)`);
+				return false;
+			}
 		}
-		const maxProducts = ramProductLimit();
-		if (maxProducts != null && multiTotalQuantity(RAM_CATEGORY) + additionalQuantity > maxProducts) {
-			window.alert(`이 메인보드는 RAM 상품을 최대 ${maxProducts}개까지 선택할 수 있습니다. (상품 1개당 RAM 2개 구성)`);
-			return false;
+		if (category === STORAGE_CATEGORY && item.formFactor === HDD_FORM_FACTOR) {
+			const bays = hddBayLimit();
+			if (bays != null && hddTotalQuantity() + additionalQuantity > bays) {
+				window.alert(`선택한 케이스는 3.5인치 저장장치(HDD)를 최대 ${bays}개까지 장착할 수 있습니다.`);
+				return false;
+			}
 		}
 		return true;
 	};
 
 	const addMultiItem = (category, product) => {
 		const list = selected[category] || (selected[category] = []);
-		if (!checkMultiSelectLimit(category, 1)) {
+		if (!checkMultiSelectLimit(category, product, 1)) {
 			return;
 		}
 		const existing = list.find((item) => item.productId === product.productId);
@@ -342,7 +360,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (!item) {
 			return;
 		}
-		if (delta > 0 && !checkMultiSelectLimit(category, 1)) {
+		if (delta > 0 && !checkMultiSelectLimit(category, item, 1)) {
 			return;
 		}
 		item.quantity += delta;
@@ -376,10 +394,28 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	};
 
+	// 케이스를 나중에 고르거나 바꿨을 때, 이미 담아둔 3.5인치 HDD가 새 케이스 베이 수를
+	// 넘으면 초과분을 비우고 알려준다(RAM의 enforceRamSlotLimit과 동일한 패턴).
+	const enforceCaseBayLimit = () => {
+		const bays = hddBayLimit();
+		if (bays == null || !selected.STORAGE || selected.STORAGE.length === 0) {
+			return;
+		}
+		if (hddTotalQuantity() > bays) {
+			selected.STORAGE = selected.STORAGE.filter((item) => item.formFactor !== HDD_FORM_FACTOR);
+			window.alert(
+				`케이스 변경으로 3.5인치 저장장치(HDD) 선택이 초기화되었습니다. 이 케이스는 3.5인치 저장장치를 최대 ${bays}개까지 지원합니다.`
+			);
+		}
+	};
+
 	const selectItem = (product) => {
 		selected[product.category] = product;
 		if (product.category === MAINBOARD_CATEGORY) {
 			enforceRamSlotLimit();
+		}
+		if (product.category === CASE_CATEGORY) {
+			enforceCaseBayLimit();
 		}
 		fetchCategoryProducts();
 		renderSummary();
@@ -562,13 +598,12 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 
 		// 3.5인치 HDD는 케이스 내부 베이에 물리적으로 장착해야 한다(2.5인치 SSD·M.2는 케이스 베이를
-		// 차지하지 않으므로 검사하지 않는다). 케이스에 베이 수 정보가 없으면 조용히 건너뛴다.
+		// 차지하지 않으므로 검사하지 않는다). 담을 때 이미 개수를 막아두지만(checkMultiSelectLimit),
+		// 프리필된 견적 등 다른 경로로 들어온 값까지 한 번 더 확인하는 안전망이다.
 		if (pcCase) {
-			const bays = parseInt(pcCase.specs?.[CASE_BAY_SPEC_KEY], 10);
-			const hddCount = (selected.STORAGE || [])
-				.filter((item) => item.formFactor === "3.5\"")
-				.reduce((sum, item) => sum + item.quantity, 0);
-			if (!Number.isNaN(bays) && hddCount > bays) {
+			const bays = hddBayLimit();
+			const hddCount = hddTotalQuantity();
+			if (bays != null && hddCount > bays) {
 				issues.push(`3.5인치 HDD를 ${hddCount}개 선택했지만, 케이스 내부 베이는 ${bays}개까지 지원합니다.`);
 			}
 		}
