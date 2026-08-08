@@ -2,6 +2,7 @@ package com.boot.compick.quote.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -13,13 +14,16 @@ import com.boot.compick.product.entity.ProductEntity;
 
 /**
  * 사용자 견적(QuoteService)과 추천 견적 관리(PresetAdminService)가 공유하는
- * "8개 카테고리 + RAM 다중 선택" 검증 로직.
+ * "8개 카테고리 + RAM/저장장치 다중 선택" 검증 로직.
  */
 final class QuoteSelectionValidator {
 
 	private static final String RAM_CATEGORY = "RAM";
+	private static final String STORAGE_CATEGORY = "STORAGE";
 	private static final String MAINBOARD_CATEGORY = "MAINBOARD";
 	private static final int RAM_MODULES_PER_PRODUCT = 2;
+	// RAM과 저장장치(SSD/HDD)는 한 견적에 여러 개를 담을 수 있다. 그 외 카테고리는 1개만 선택한다.
+	private static final Set<String> MULTI_SELECT_CATEGORIES = Set.of(RAM_CATEGORY, STORAGE_CATEGORY);
 
 	private QuoteSelectionValidator() {
 	}
@@ -36,7 +40,7 @@ final class QuoteSelectionValidator {
 					"8개 카테고리를 각각 하나 이상 선택해야 합니다."
 				);
 			}
-			if (!RAM_CATEGORY.equals(tab.name()) && itemsInCategory.size() > 1) {
+			if (!MULTI_SELECT_CATEGORIES.contains(tab.name()) && itemsInCategory.size() > 1) {
 				throw new ResponseStatusException(
 					HttpStatus.BAD_REQUEST,
 					tab.label() + "는 하나만 선택할 수 있습니다."

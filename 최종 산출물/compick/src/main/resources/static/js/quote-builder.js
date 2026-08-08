@@ -11,6 +11,43 @@ const SPEC_LABELS = {
 	"Efficiency": "인증 등급"
 };
 
+const CASE_BAY_SPEC_KEY = "Internal 3.5\" Bays";
+
+/* 견적 카드에 보여줄 스펙 요약을 카테고리별로 고른다(전체 spec_json을 그대로 나열하면
+ * 줄바꿈 수가 상품마다 달라져 카드 높이가 들쭉날쭉해진다 — CPU_COOLER 자연어 변환, GPU/CASE
+ * 순서 지정, MAINBOARD 색상 제외 등 표시 형식도 여기서 함께 정리한다). */
+const getDisplaySpecs = (product) => {
+	const specs = product.specs ?? {};
+	switch (product.category) {
+		case "CPU":
+			return [
+				specs["Socket"],
+				specs["Core Count"] ? `${specs["Core Count"]}코어` : null,
+				product.powerConsumption != null ? `${product.powerConsumption}W` : null
+			].filter(Boolean);
+		case "CPU_COOLER": {
+			const type = (specs["Type"] ?? "").toLowerCase();
+			if (!type) return [];
+			return [type.includes("liquid") || type.includes("water") ? "수냉" : "공랭"];
+		}
+		case "MAINBOARD":
+			return Object.entries(specs)
+				.filter(([key]) => key !== "Color")
+				.map(([, value]) => value)
+				.filter(Boolean);
+		case "GPU":
+			return ["Color", "Core Clock", "Boost Clock", "Chipset", "Length", "Memory"]
+				.map((key) => specs[key])
+				.filter(Boolean);
+		case "CASE":
+			return ["Color", "Side Panel", "Max GPU Length", "Form Factor"]
+				.map((key) => specs[key])
+				.filter(Boolean);
+		default:
+			return Object.values(specs).filter(Boolean);
+	}
+};
+
 document.addEventListener("DOMContentLoaded", () => {
 	const categoryButtons = document.querySelectorAll(".category-tabs button[data-category]");
 	if (categoryButtons.length === 0) {
@@ -46,6 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
 	const RAM_MODULES_PER_PRODUCT = 2;
 	const RAM_CATEGORY = "RAM";
 	const MAINBOARD_CATEGORY = "MAINBOARD";
+	const STORAGE_CATEGORY = "STORAGE";
+	// RAM과 저장장치(SSD/HDD)는 여러 개를 함께 담을 수 있다. 그 외 카테고리는 1개만 선택한다.
+	const MULTI_SELECT_CATEGORIES = new Set([RAM_CATEGORY, STORAGE_CATEGORY]);
+	const isMultiSelectCategory = (categoryName) => MULTI_SELECT_CATEGORIES.has(categoryName);
 	const categories = Array.from(categoryButtons).map((button) => ({
 		name: button.dataset.category,
 		label: button.textContent.trim()
@@ -227,8 +268,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	};
 
 	const isCategorySelected = (categoryName) =>
-		categoryName === RAM_CATEGORY
-			? Boolean(selected.RAM && selected.RAM.length > 0)
+		isMultiSelectCategory(categoryName)
+			? Boolean(selected[categoryName] && selected[categoryName].length > 0)
 			: Boolean(selected[categoryName]);
 
 	const ramSlotLimit = () => selected.MAINBOARD?.memorySlots ?? null;
@@ -237,18 +278,13 @@ document.addEventListener("DOMContentLoaded", () => {
 		return slots == null ? null : Math.floor(slots / RAM_MODULES_PER_PRODUCT);
 	};
 
-	const ramTotalQuantity = () =>
-		(selected.RAM || []).reduce((sum, item) => sum + item.quantity, 0);
-
 	const loadInitialItems = () => {
 		try {
 			const items = JSON.parse(window.__QUOTE_INITIAL_ITEMS__ ?? "[]");
 			items.forEach((item) => {
-				if (item.category === RAM_CATEGORY) {
-					if (!selected.RAM) {
-						selected.RAM = [];
-					}
-					selected.RAM.push({ ...item, quantity: item.quantity ?? 1 });
+				if (isMultiSelectCategory(item.category)) {
+					const list = selected[item.category] || (selected[item.category] = []);
+					list.push({ ...item, quantity: item.quantity ?? 1 });
 				} else {
 					selected[item.category] = item;
 				}
@@ -258,49 +294,59 @@ document.addEventListener("DOMContentLoaded", () => {
 		}
 	};
 
-	const addRamItem = (product) => {
-		const ramList = selected.RAM || (selected.RAM = []);
+	const multiTotalQuantity = (category) =>
+		(selected[category] || []).reduce((sum, item) => sum + item.quantity, 0);
+
+	// RAM은 메인보드 슬롯 수에 따른 상한이 있다. 그 외 다중 선택 카테고리(저장장치)는 상한이 없다.
+	const checkMultiSelectLimit = (category, additionalQuantity) => {
+		if (category !== RAM_CATEGORY) {
+			return true;
+		}
 		const maxProducts = ramProductLimit();
-		if (maxProducts != null && ramTotalQuantity() + 1 > maxProducts) {
+		if (maxProducts != null && multiTotalQuantity(RAM_CATEGORY) + additionalQuantity > maxProducts) {
 			window.alert(`이 메인보드는 RAM 상품을 최대 ${maxProducts}개까지 선택할 수 있습니다. (상품 1개당 RAM 2개 구성)`);
+			return false;
+		}
+		return true;
+	};
+
+	const addMultiItem = (category, product) => {
+		const list = selected[category] || (selected[category] = []);
+		if (!checkMultiSelectLimit(category, 1)) {
 			return;
 		}
-		const existing = ramList.find((item) => item.productId === product.productId);
+		const existing = list.find((item) => item.productId === product.productId);
 		if (existing) {
 			existing.quantity += 1;
 		} else {
-			ramList.push({ ...product, quantity: 1 });
+			list.push({ ...product, quantity: 1 });
 		}
 		fetchCategoryProducts();
 		renderSummary();
 	};
 
-	const changeRamQuantity = (productId, delta) => {
-		const ramList = selected.RAM || [];
-		const item = ramList.find((entry) => entry.productId === productId);
+	const changeMultiItemQuantity = (category, productId, delta) => {
+		const list = selected[category] || [];
+		const item = list.find((entry) => entry.productId === productId);
 		if (!item) {
 			return;
 		}
-		if (delta > 0) {
-			const maxProducts = ramProductLimit();
-			if (maxProducts != null && ramTotalQuantity() + 1 > maxProducts) {
-				window.alert(`이 메인보드는 RAM 상품을 최대 ${maxProducts}개까지 선택할 수 있습니다. (상품 1개당 RAM 2개 구성)`);
-				return;
-			}
+		if (delta > 0 && !checkMultiSelectLimit(category, 1)) {
+			return;
 		}
 		item.quantity += delta;
 		if (item.quantity <= 0) {
-			selected.RAM = ramList.filter((entry) => entry.productId !== productId);
+			selected[category] = list.filter((entry) => entry.productId !== productId);
 		}
-		if (currentCategory === RAM_CATEGORY) {
+		if (currentCategory === category) {
 			fetchCategoryProducts();
 		}
 		renderSummary();
 	};
 
-	const removeRamItem = (productId) => {
-		selected.RAM = (selected.RAM || []).filter((entry) => entry.productId !== productId);
-		if (currentCategory === RAM_CATEGORY) {
+	const removeMultiItem = (category, productId) => {
+		selected[category] = (selected[category] || []).filter((entry) => entry.productId !== productId);
+		if (currentCategory === category) {
 			fetchCategoryProducts();
 		}
 		renderSummary();
@@ -311,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (maxProducts == null || !selected.RAM || selected.RAM.length === 0) {
 			return;
 		}
-		if (ramTotalQuantity() > maxProducts) {
+		if (multiTotalQuantity(RAM_CATEGORY) > maxProducts) {
 			selected.RAM = [];
 			window.alert(
 				`메인보드 변경으로 RAM 선택이 초기화되었습니다. RAM 상품은 최대 ${maxProducts}개까지 선택할 수 있습니다. (상품 1개당 RAM 2개 구성)`
@@ -333,12 +379,12 @@ document.addEventListener("DOMContentLoaded", () => {
 		li.className = "product-grid-item";
 		li.dataset.productId = product.productId;
 
-		const isRam = product.category === RAM_CATEGORY;
-		const ramLine = isRam
-			? (selected.RAM || []).find((item) => item.productId === product.productId)
+		const isMultiSelect = isMultiSelectCategory(product.category);
+		const multiLine = isMultiSelect
+			? (selected[product.category] || []).find((item) => item.productId === product.productId)
 			: null;
-		const isSingleSelected = !isRam && selected[product.category]?.productId === product.productId;
-		if (isSingleSelected || ramLine) {
+		const isSingleSelected = !isMultiSelect && selected[product.category]?.productId === product.productId;
+		if (isSingleSelected || multiLine) {
 			li.classList.add("is-selected");
 		}
 
@@ -365,22 +411,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		const specLine = document.createElement("p");
 		specLine.className = "product-spec-line";
-		specLine.textContent = Object.values(product.specs ?? {}).join(" / ");
+		specLine.textContent = getDisplaySpecs(product).join(" / ");
 
 		const price = document.createElement("strong");
 		price.textContent = formatPrice(product.price);
 
 		const button = document.createElement("button");
 		button.type = "button";
-		if (isRam) {
-			button.textContent = ramLine ? `추가 (담김 ${ramLine.quantity}개)` : "추가";
+		if (isMultiSelect) {
+			button.textContent = multiLine ? `추가 (담김 ${multiLine.quantity}개)` : "추가";
 		} else {
 			button.textContent = isSingleSelected ? "선택됨" : "담기";
 		}
 		button.disabled = product.stockQuantity <= 0;
 		button.addEventListener("click", () => {
-			if (isRam) {
-				addRamItem(product);
+			if (isMultiSelect) {
+				addMultiItem(product.category, product);
 			} else {
 				selectItem(product);
 			}
@@ -504,6 +550,18 @@ document.addEventListener("DOMContentLoaded", () => {
 			}
 		}
 
+		// 3.5인치 HDD는 케이스 내부 베이에 물리적으로 장착해야 한다(2.5인치 SSD·M.2는 케이스 베이를
+		// 차지하지 않으므로 검사하지 않는다). 케이스에 베이 수 정보가 없으면 조용히 건너뛴다.
+		if (pcCase) {
+			const bays = parseInt(pcCase.specs?.[CASE_BAY_SPEC_KEY], 10);
+			const hddCount = (selected.STORAGE || [])
+				.filter((item) => item.formFactor === "3.5\"")
+				.reduce((sum, item) => sum + item.quantity, 0);
+			if (!Number.isNaN(bays) && hddCount > bays) {
+				issues.push(`3.5인치 HDD를 ${hddCount}개 선택했지만, 케이스 내부 베이는 ${bays}개까지 지원합니다.`);
+			}
+		}
+
 		return issues;
 	};
 
@@ -533,7 +591,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			const heading = document.createElement("strong");
 			heading.textContent = "✓ 호환성 검사 통과";
 			const span = document.createElement("span");
-			span.textContent = "소켓·메모리 규격·폼팩터·GPU 길이·파워 용량을 확인했습니다.";
+			span.textContent = "소켓·메모리 규격·폼팩터·GPU 길이·파워 용량·저장장치 베이 수를 확인했습니다.";
 			compatibilityBanner.append(heading, span);
 			return;
 		}
@@ -548,7 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	/* ---- 내 견적서 요약 ---- */
 
-	const renderRamSummaryLine = (item, showLabel, label) => {
+	const renderMultiItemSummaryLine = (category, item, showLabel, label) => {
 		const li = document.createElement("li");
 		li.className = "ram-summary-line";
 
@@ -568,20 +626,20 @@ document.addEventListener("DOMContentLoaded", () => {
 		minusButton.type = "button";
 		minusButton.textContent = "−";
 		minusButton.setAttribute("aria-label", `${item.name} 수량 줄이기`);
-		minusButton.addEventListener("click", () => changeRamQuantity(item.productId, -1));
+		minusButton.addEventListener("click", () => changeMultiItemQuantity(category, item.productId, -1));
 
 		const plusButton = document.createElement("button");
 		plusButton.type = "button";
 		plusButton.textContent = "+";
 		plusButton.setAttribute("aria-label", `${item.name} 수량 늘리기`);
-		plusButton.addEventListener("click", () => changeRamQuantity(item.productId, 1));
+		plusButton.addEventListener("click", () => changeMultiItemQuantity(category, item.productId, 1));
 
 		const removeButton = document.createElement("button");
 		removeButton.type = "button";
 		removeButton.className = "ram-remove";
 		removeButton.textContent = "✕";
 		removeButton.setAttribute("aria-label", `${item.name} 삭제`);
-		removeButton.addEventListener("click", () => removeRamItem(item.productId));
+		removeButton.addEventListener("click", () => removeMultiItem(category, item.productId));
 
 		stepper.append(minusButton, plusButton, removeButton);
 		value.append(name, stepper);
@@ -625,9 +683,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		summaryList.innerHTML = "";
 
 		categories.forEach((category) => {
-			if (category.name === RAM_CATEGORY) {
-				const ramList = selected.RAM || [];
-				if (ramList.length === 0) {
+			if (isMultiSelectCategory(category.name)) {
+				const list = selected[category.name] || [];
+				if (list.length === 0) {
 					const li = document.createElement("li");
 					const label = document.createElement("span");
 					label.textContent = category.label;
@@ -638,8 +696,8 @@ document.addEventListener("DOMContentLoaded", () => {
 					summaryList.appendChild(li);
 					return;
 				}
-				ramList.forEach((item, index) => {
-					summaryList.appendChild(renderRamSummaryLine(item, index === 0, category.label));
+				list.forEach((item, index) => {
+					summaryList.appendChild(renderMultiItemSummaryLine(category.name, item, index === 0, category.label));
 				});
 				return;
 			}
@@ -656,13 +714,15 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 
 		const singleSelectItems = categories
-			.filter((category) => category.name !== RAM_CATEGORY)
+			.filter((category) => !isMultiSelectCategory(category.name))
 			.map((category) => selected[category.name])
 			.filter(Boolean);
-		const ramItems = selected.RAM || [];
+		const multiSelectItems = categories
+			.filter((category) => isMultiSelectCategory(category.name))
+			.flatMap((category) => selected[category.name] || []);
 
 		const partsTotal = singleSelectItems.reduce((sum, item) => sum + Number(item.price), 0)
-			+ ramItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+			+ multiSelectItems.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
 
 		const checkedAssembly = document.querySelector("[data-assembly-option]:checked");
 		const total = partsTotal + assemblyFee();
@@ -720,9 +780,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		try {
 			const items = [];
 			categories.forEach((category) => {
-				if (category.name === RAM_CATEGORY) {
-					(selected.RAM || []).forEach((ram) => {
-						items.push({ productId: ram.productId, quantity: ram.quantity });
+				if (isMultiSelectCategory(category.name)) {
+					(selected[category.name] || []).forEach((entry) => {
+						items.push({ productId: entry.productId, quantity: entry.quantity });
 					});
 					return;
 				}
@@ -804,11 +864,11 @@ document.addEventListener("DOMContentLoaded", () => {
 		if (!product) {
 			return;
 		}
-		const isRam = product.category === RAM_CATEGORY;
+		const isMultiSelect = isMultiSelectCategory(product.category);
 		window.ProductModal?.open(productId, [
 			{
-				label: isRam ? "견적에 추가" : "견적에 담기",
-				onClick: () => (isRam ? addRamItem(product) : selectItem(product))
+				label: isMultiSelect ? "견적에 추가" : "견적에 담기",
+				onClick: () => (isMultiSelect ? addMultiItem(product.category, product) : selectItem(product))
 			}
 		]);
 	});

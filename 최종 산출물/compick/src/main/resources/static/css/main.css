@@ -1199,9 +1199,15 @@ main {
 }
 
 .product-grid-item .product-spec-line {
+	display: -webkit-box;
+	overflow: hidden;
 	margin: 4px 0 0;
+	min-height: 34px;
 	color: var(--color-text-muted);
 	font-size: 12px;
+	line-height: 17px;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 }
 
 .product-grid-item strong {

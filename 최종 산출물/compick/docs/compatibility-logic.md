@@ -33,6 +33,9 @@
 | 3 | 폼팩터 호환 | 메인보드 ↔ 케이스 | `PRODUCT.form_factor` (자유 텍스트) | 아래 "폼팩터 서열" 규칙으로 순위를 매겨 `caseRank >= boardRank`이어야 함 |
 | 4 | 그래픽카드 장착 길이 | GPU ↔ 케이스 | `PRODUCT.gpu_length_mm`, `PRODUCT.max_gpu_length_mm` | `gpu.gpuLengthMm <= case.maxGpuLengthMm` |
 | 5 | 파워 용량 | (CPU + GPU) ↔ 파워 | `PRODUCT.power_consumption`(CPU), `PRODUCT.recommended_power`(GPU), `PRODUCT.power_capacity_watt`(파워) | `ceil((cpu.powerConsumption + gpu.recommendedPower) * 1.2) <= psu.powerCapacityWatt` (20% 여유율) |
+| 6 | 저장장치 베이 수 | 저장장치(3.5인치 HDD만) ↔ 케이스 | `spec_json."Internal 3.5\" Bays"`(케이스), 저장장치의 `form_factor` | 선택한 3.5인치 HDD 수량 합계 `<= case.specs["Internal 3.5\" Bays"]`. 2.5인치 SSD·M.2는 케이스 베이를 쓰지 않으므로 집계에서 제외한다 |
+
+규칙 6은 RAM처럼 **저장장치(STORAGE)도 여러 개를 동시에 선택할 수 있게 되면서** 추가됐다(예: SSD 1개 + HDD 1개를 함께 담는 경우). 저장장치는 RAM과 동일한 다중 선택 패턴(`MULTI_SELECT_CATEGORIES`)을 프런트엔드(`quote-builder.js`)와 서버(`QuoteSelectionValidator`) 양쪽에서 공유한다.
 
 이 5개 컬럼(`gpu_length_mm`, `max_gpu_length_mm`, `power_capacity_watt`)은 스키마(`compick_schema_oracle.sql`)에는
 이미 있었지만 이번 작업 전에는 `ProductEntity`에 매핑되어 있지 않았다. 이번에 `ProductEntity`, `ProductListItemResponse`,
