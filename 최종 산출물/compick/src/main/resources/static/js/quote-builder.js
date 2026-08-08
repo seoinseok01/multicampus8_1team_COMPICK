@@ -13,6 +13,17 @@ const SPEC_LABELS = {
 
 const CASE_BAY_SPEC_KEY = "Internal 3.5\" Bays";
 
+/* 필터 드롭다운에 나열되는 값은 기본적으로 spec_json 원본 그대로 보여준다(AM4, ATX,
+ * GeForce RTX 5090 등은 그대로가 자연스럽다). CPU_COOLER의 "Type"(air/Liquid)만
+ * 예외로, 카드와 동일하게 공랭/수냉으로 바꿔서 보여준다. */
+const formatFacetValue = (category, specKey, value) => {
+	if (category === "CPU_COOLER" && specKey === "Type") {
+		const lower = value.toLowerCase();
+		return lower.includes("liquid") || lower.includes("water") ? "수냉" : "공랭";
+	}
+	return value;
+};
+
 /* 견적 카드에 보여줄 스펙 요약을 카테고리별로 고른다(전체 spec_json을 그대로 나열하면
  * 줄바꿈 수가 상품마다 달라져 카드 높이가 들쭉날쭉해진다 — CPU_COOLER 자연어 변환, GPU/CASE
  * 순서 지정, MAINBOARD 색상 제외 등 표시 형식도 여기서 함께 정리한다). */
@@ -210,7 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				values.forEach((value) => {
 					const option = document.createElement("option");
 					option.value = value;
-					option.textContent = value;
+					option.textContent = formatFacetValue(category, key, value);
 					select.appendChild(option);
 				});
 
