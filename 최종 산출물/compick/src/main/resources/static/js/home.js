@@ -165,7 +165,16 @@ document.addEventListener("DOMContentLoaded", () => {
 			const requirement = card.querySelector(".ai-highlight-requirement")?.textContent ?? "";
 			const explanation = card.querySelector(".ai-highlight-explanation")?.textContent ?? "";
 			const price = card.querySelector(".ai-highlight-price")?.textContent ?? "";
+			const keywords = Array.from(card.querySelectorAll(".ai-highlight-keywords li"));
 			const items = Array.from(card.querySelectorAll(".ai-highlight-items li"));
+
+			const keywordsList = highlightDialog.querySelector("[data-dialog-keywords]");
+			keywordsList.innerHTML = "";
+			keywords.forEach((keyword) => {
+				const chip = document.createElement("li");
+				chip.textContent = keyword.textContent;
+				keywordsList.appendChild(chip);
+			});
 
 			highlightDialog.querySelector("[data-dialog-requirement]").textContent = requirement;
 			const explanationElement = highlightDialog.querySelector("[data-dialog-explanation]");

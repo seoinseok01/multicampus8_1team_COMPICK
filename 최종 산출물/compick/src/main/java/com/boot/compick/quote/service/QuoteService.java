@@ -201,17 +201,20 @@ public class QuoteService {
 			return null;
 		}
 
+		AiRecommendationResponse answer = parseAnswer(recommendation.getAiAnswerJson());
+
 		return new AiHighlightResponse(
 			recommendation.getUserRequirements(),
-			explanationOf(recommendation.getAiAnswerJson()),
+			answer == null ? List.of() : answer.keywords(),
+			answer == null ? null : answer.explanation(),
 			items,
 			totalPrice(items)
 		);
 	}
 
-	private String explanationOf(String aiAnswerJson) {
+	private AiRecommendationResponse parseAnswer(String aiAnswerJson) {
 		try {
-			return objectMapper.readValue(aiAnswerJson, AiRecommendationResponse.class).explanation();
+			return objectMapper.readValue(aiAnswerJson, AiRecommendationResponse.class);
 		} catch (Exception ignored) {
 			return null;
 		}

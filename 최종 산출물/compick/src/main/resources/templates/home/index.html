@@ -25,7 +25,7 @@
 			<p>호환성 검사를 받으며 안전하게 구성할 수 있습니다.</p>
 
 			<div class="hero-actions">
-				<a th:href="@{/ai-quotes}">AI로 견적 추천받기</a>
+				<a th:href="@{/products}">부품 둘러보기</a>
 				<a th:href="@{/quotes/new}">직접 견적 만들기</a>
 			</div>
 
@@ -35,14 +35,17 @@
 		</section>
 
 		<section class="ai-highlight" aria-labelledby="ai-highlight-title" th:if="${!#lists.isEmpty(aiHighlights)}">
-			<h2 id="ai-highlight-title">방금 AI가 추천한 견적</h2>
-			<p class="ai-highlight-subtitle">실제 이용자가 AI에게 받은 견적을 둘러보세요.</p>
+			<h2 id="ai-highlight-title">다른 사람이 맞춘 견적</h2>
+			<p class="ai-highlight-subtitle">실제 이용자가 맞춘 견적을 둘러보세요.</p>
 
 			<div class="ai-highlight-viewport">
 				<button type="button" class="ai-highlight-nav prev" aria-label="이전 추천 보기">&lsaquo;</button>
 				<ul class="ai-highlight-track">
 					<li class="ai-highlight-card" th:each="highlight : ${aiHighlights}" tabindex="0" role="button" aria-haspopup="dialog">
-						<p class="ai-highlight-requirement" th:text="|&ldquo;${highlight.requirement}&rdquo;|"></p>
+						<ul class="keyword-list ai-highlight-keywords" th:if="${!#lists.isEmpty(highlight.keywords)}">
+							<li th:each="keyword : ${highlight.keywords}" th:text="${keyword}"></li>
+						</ul>
+						<p class="ai-highlight-requirement" hidden th:text="${highlight.requirement}"></p>
 						<p class="ai-highlight-explanation" th:if="${highlight.explanation != null and !#strings.isEmpty(highlight.explanation)}" th:text="${highlight.explanation}"></p>
 						<ul class="ai-highlight-items">
 							<li th:each="item : ${highlight.items}" th:text="${item.name}"
@@ -61,6 +64,7 @@
 
 		<dialog id="ai-highlight-dialog" class="ai-highlight-dialog" aria-labelledby="ai-highlight-dialog-title">
 			<button type="button" class="dialog-close-button" aria-label="추천 견적 상세 닫기">&times;</button>
+			<ul class="keyword-list" data-dialog-keywords></ul>
 			<p class="ai-highlight-dialog-requirement" id="ai-highlight-dialog-title" data-dialog-requirement></p>
 			<p class="ai-highlight-dialog-explanation" data-dialog-explanation></p>
 			<ul class="ai-highlight-dialog-items" data-dialog-items></ul>
