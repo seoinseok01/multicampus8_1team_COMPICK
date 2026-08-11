@@ -46,7 +46,7 @@
 							<li th:each="keyword : ${highlight.keywords}" th:text="${keyword}"></li>
 						</ul>
 						<p class="ai-highlight-requirement" hidden th:text="${highlight.requirement}"></p>
-						<p class="ai-highlight-explanation" th:if="${highlight.explanation != null and !#strings.isEmpty(highlight.explanation)}" th:text="${highlight.explanation}"></p>
+						<p class="ai-highlight-explanation" hidden th:if="${highlight.explanation != null and !#strings.isEmpty(highlight.explanation)}" th:text="${highlight.explanation}"></p>
 						<ul class="ai-highlight-items">
 							<li th:each="item : ${highlight.items}" th:text="${item.name}"
 								th:data-product-id="${item.productId}"
