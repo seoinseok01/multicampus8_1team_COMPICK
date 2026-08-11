@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>주문 내역 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="order-page">
+		<section class="page-heading">
+			<p>ORDERS</p>
+			<h1>주문 내역</h1>
+			<span>주문 상태와 결제 내역을 확인합니다.</span>
+		</section>
+
+		<nav class="order-status-tabs" aria-label="주문 상태">
+			<a th:href="@{/orders}" th:classappend="${activeStatus == ''} ? 'is-active'">전체</a>
+			<a th:href="@{/orders(status='PAID')}" th:classappend="${activeStatus == 'PAID'} ? 'is-active'">결제 완료</a>
+			<a th:href="@{/orders(status='SHIPPING')}" th:classappend="${activeStatus == 'SHIPPING'} ? 'is-active'">배송 중</a>
+			<a th:href="@{/orders(status='DELIVERED')}" th:classappend="${activeStatus == 'DELIVERED'} ? 'is-active'">배송 완료</a>
+			<a th:href="@{/orders(status='CANCELLED')}" th:classappend="${activeStatus == 'CANCELLED'} ? 'is-active'">취소·반품</a>
+		</nav>
+
+		<section class="order-card-list" th:if="${!#lists.isEmpty(orders)}">
+			<article class="order-card" th:each="order : ${orders}">
+				<div class="order-card-body">
+					<time th:text="|${order.orderedAt} · ${order.orderNumber}|">2026.07.16 · CP20260716001</time>
+					<h3 th:text="${order.title}">게이밍 PC 견적 외 1건</h3>
+					<strong th:text="|${#numbers.formatInteger(order.finalAmount, 0, 'COMMA')}원|">0원</strong>
+				</div>
+				<span
+					class="order-card-status"
+					th:classappend="${order.status == 'CANCELLED' or order.status == 'RETURN_COMPLETED'} ? 'is-cancelled' : (${order.status == 'PAID' or order.status == 'DELIVERED'} ? 'is-paid' : '')"
+					th:text="${order.statusLabel}">
+					결제 완료
+				</span>
+				<a class="detail-button" th:href="@{/orders/{orderNumber}(orderNumber=${order.orderNumber})}">상세 보기</a>
+			</article>
+		</section>
+
+		<p class="empty-products" th:if="${#lists.isEmpty(orders)}">해당 조건의 주문 내역이 없습니다.</p>
+	</main>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

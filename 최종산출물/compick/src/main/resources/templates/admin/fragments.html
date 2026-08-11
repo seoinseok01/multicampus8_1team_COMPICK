@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<aside th:fragment="sidebar(active)" class="admin-sidebar">
+		<a class="admin-brand" th:href="@{/admin}"><b>C</b><span>COMPICK Admin</span></a>
+		<nav aria-label="관리자 메뉴">
+			<a th:href="@{/admin}" th:classappend="${active == 'dashboard'} ? 'is-active'">대시보드</a>
+			<a th:href="@{/admin/members}" th:classappend="${active == 'members'} ? 'is-active'">회원 관리</a>
+			<a th:href="@{/admin/products}" th:classappend="${active == 'products'} ? 'is-active'">상품 관리</a>
+			<a th:href="@{/admin/presets}" th:classappend="${active == 'presets'} ? 'is-active'">추천견적 관리</a>
+			<a th:href="@{/admin/orders}" th:classappend="${active == 'orders'} ? 'is-active'">주문/배송 관리</a>
+			<a th:href="@{/admin/ai-logs}" th:classappend="${active == 'ai'} ? 'is-active'">AI 추천 로그</a>
+		</nav>
+		<a class="admin-back" th:href="@{/mypage}">사용자 페이지로</a>
+	</aside>
+</body>
+</html>

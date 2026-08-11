@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>주문 상세 | COMPICK</title>
+	<link rel="stylesheet" th:href="@{/css/main.css}">
+	<meta name="_csrf" th:content="${_csrf.token}">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+	<meta name="order-number" th:content="${order.orderNumber}">
+	<script th:src="@{/js/order-detail.js}" defer></script>
+</head>
+<body>
+	<div th:replace="~{fragments/header :: siteHeader}"></div>
+	<main class="order-page">
+		<section class="page-heading">
+			<p>ORDER DETAIL</p>
+			<h1>주문 상세</h1>
+			<span>상품, 결제와 배송 정보를 확인합니다.</span>
+		</section>
+
+		<div class="order-detail-summary">
+			<div>
+				<strong th:text="|주문번호 ${order.orderNumber}|">주문번호 CP20260716001</strong>
+				<time th:text="|${order.orderedAt} 주문|">2026.07.16 14:32 주문</time>
+			</div>
+			<span class="status-label" th:text="${order.statusLabel}">결제 완료</span>
+		</div>
+
+		<div class="order-detail-layout">
+			<section class="order-content">
+				<div class="order-section">
+					<h2>주문 상품</h2>
+					<ul class="cart-line-list">
+						<li class="cart-line-item" th:each="group : ${order.groups}">
+							<div class="cart-line-info">
+								<h3 th:text="${group.groupName}">게이밍 PC 견적 #001</h3>
+								<p th:text="${group.subtitle}">8개 부품 · 수량 1</p>
+							</div>
+							<strong class="cart-line-price" th:text="|${#numbers.formatInteger(group.groupTotal, 0, 'COMMA')}원|">0원</strong>
+						</li>
+					</ul>
+				</div>
+			</section>
+
+			<aside>
+				<div class="order-detail-panel">
+					<h2>배송 정보</h2>
+					<p>
+						<strong th:text="${order.recipientName}">서인석</strong>
+						· <span th:text="${order.maskedPhone}">010-****-0108</span>
+					</p>
+					<p th:text="${order.fullAddress}">서울특별시 강남구 테헤란로 ***</p>
+					<p th:if="${order.deliveryRequest}" th:text="${order.deliveryRequest}"></p>
+				</div>
+
+				<div class="order-detail-panel">
+					<h2>결제 정보</h2>
+					<p th:if="${order.paymentMethodLabel}" th:text="|${order.paymentMethodLabel} · ${#numbers.formatInteger(order.paymentAmount, 0, 'COMMA')}원|">
+						카카오페이 · 1,918,000원
+					</p>
+					<p th:unless="${order.paymentMethodLabel}">결제 대기 중입니다.</p>
+
+					<div class="order-detail-actions">
+						<button type="button" data-cancel-button th:disabled="${!order.cancellable}">주문 취소 요청</button>
+						<button type="button" data-return-button th:disabled="${order.returnRequested or (order.status != 'SHIPPING' and order.status != 'DELIVERED')}" th:text="${order.returnRequested?'반품 요청 완료':'반품 요청'}">반품 요청</button>
+					</div>
+				</div>
+			</aside>
+		</div>
+	</main>
+	<p id="cart-feedback" class="cart-feedback" role="status" aria-live="polite" hidden></p>
+	<div th:replace="~{fragments/footer :: siteFooter}"></div>
+</body>
+</html>

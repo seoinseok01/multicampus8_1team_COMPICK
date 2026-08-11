@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+	<nav th:fragment="mypageSidebar(active)" class="mypage-sidebar" aria-label="마이페이지 메뉴">
+		<h2>마이페이지</h2>
+		<a th:href="@{/mypage}"
+			th:classappend="${active == 'profile'} ? is-active"
+			th:attrappend="aria-current=${active == 'profile'} ? page">
+			회원정보
+		</a>
+		<a th:href="@{/mypage/addresses}"
+			th:classappend="${active == 'addresses'} ? is-active"
+			th:attrappend="aria-current=${active == 'addresses'} ? page">
+			배송지 관리
+		</a>
+		<a th:href="@{/orders}"
+			th:classappend="${active == 'orders'} ? is-active"
+			th:attrappend="aria-current=${active == 'orders'} ? page">
+			주문 내역
+		</a>
+		<a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">관리자 페이지</a>
+	</nav>
+</body>
+</html>

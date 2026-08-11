@@ -1,0 +1,19 @@
+-- 기존 SOCIAL_ACCOUNT 테이블에 소셜 회원 비밀번호 설정 완료 여부를 추가한다.
+
+WHENEVER SQLERROR EXIT SQL.SQLCODE;
+SET SQLBLANKLINES ON;
+
+ALTER SESSION SET CURRENT_SCHEMA = COMPICK;
+
+ALTER TABLE SOCIAL_ACCOUNT ADD (
+    setup_completed CHAR(1) DEFAULT 'N' NOT NULL
+);
+
+ALTER TABLE SOCIAL_ACCOUNT ADD CONSTRAINT ck_social_setup_completed
+    CHECK (setup_completed IN ('Y', 'N'));
+
+COMMENT ON COLUMN SOCIAL_ACCOUNT.setup_completed
+    IS '소셜 가입 후 비밀번호 설정 완료 여부';
+
+COMMIT;
+EXIT;
