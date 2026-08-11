@@ -5,6 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.boot.compick.product.CategoryDisplay;
 import com.boot.compick.product.service.ProductService;
@@ -21,12 +22,15 @@ public class ShoppingPageController {
 	}
 
 	@GetMapping("/products")
-	public String products(Model model) {
+	public String products(@RequestParam(defaultValue = "CPU") String category, Model model) {
+		String initialCategory = CategoryDisplay.CATEGORY_TABS.stream()
+			.anyMatch(tab -> tab.name().equals(category)) ? category : "CPU";
 		model.addAttribute("categoryTabs", CategoryDisplay.CATEGORY_TABS);
+		model.addAttribute("initialCategory", initialCategory);
 		model.addAttribute(
 			"initialProducts",
 			productService.listProducts(
-				"CPU",
+				initialCategory,
 				null,
 				null,
 				null,

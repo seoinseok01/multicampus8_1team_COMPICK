@@ -171,7 +171,7 @@ CREATE TABLE PRODUCT (
     CONSTRAINT ck_product_stock
         CHECK (stock_quantity >= 0),
     CONSTRAINT ck_product_sales_status
-        CHECK (sales_status IN ('ON_SALE', 'SOLD_OUT', 'HIDDEN', 'DISCONTINUED')),
+        CHECK (sales_status IN ('ON_SALE', 'OFF_SALE', 'SOLD_OUT', 'HIDDEN', 'DISCONTINUED')),
     CONSTRAINT ck_product_power_consumption
         CHECK (power_consumption IS NULL OR power_consumption >= 0),
     CONSTRAINT ck_product_recommended_power
@@ -201,6 +201,7 @@ CREATE TABLE QUOTE (
     assembly_type         VARCHAR2(20)  DEFAULT 'SELF' NOT NULL,
     purpose_tag           VARCHAR2(20),
     summary_description   VARCHAR2(200),
+    image_url             VARCHAR2(1000),
     created_at            TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at            TIMESTAMP     DEFAULT SYSTIMESTAMP NOT NULL,
 
@@ -336,6 +337,9 @@ CREATE TABLE ORDERS (
     basic_address     VARCHAR2(255)  NOT NULL,
     detail_address    VARCHAR2(255),
     delivery_request  VARCHAR2(500),
+    return_requested_at TIMESTAMP,
+    stock_deducted_at TIMESTAMP,
+    stock_restored_at TIMESTAMP,
     ordered_at        TIMESTAMP      DEFAULT SYSTIMESTAMP NOT NULL,
     updated_at        TIMESTAMP      DEFAULT SYSTIMESTAMP NOT NULL,
 
@@ -455,14 +459,17 @@ CREATE TABLE PAYMENT (
 -- UNIQUE 제약조건으로 이미 인덱스가 만들어지는 컬럼 조합은 제외했다.
 -- ============================================================
 
-CREATE INDEX idx_address_member
-    ON ADDRESS (member_id);
+CREATE INDEX idx_address_member_default
+    ON ADDRESS (member_id, is_default DESC, address_id);
 
-CREATE INDEX idx_product_category
-    ON PRODUCT (category_id);
+CREATE INDEX idx_product_catalog
+    ON PRODUCT (category_id, sales_status, rating_count DESC, created_at DESC);
 
-CREATE INDEX idx_quote_member
-    ON QUOTE (member_id);
+CREATE INDEX idx_quote_member_type_created
+    ON QUOTE (member_id, quote_type, created_at DESC);
+
+CREATE INDEX idx_quote_type_created
+    ON QUOTE (quote_type, created_at DESC);
 
 CREATE INDEX idx_quote_item_product
     ON QUOTE_ITEM (product_id);
@@ -473,8 +480,14 @@ CREATE INDEX idx_cart_product_item_product
 CREATE INDEX idx_cart_quote_item_quote
     ON CART_QUOTE_ITEM (quote_id);
 
-CREATE INDEX idx_orders_member
-    ON ORDERS (member_id);
+CREATE INDEX idx_orders_member_status_ordered
+    ON ORDERS (member_id, order_status, ordered_at DESC);
+
+CREATE INDEX idx_orders_ordered
+    ON ORDERS (ordered_at DESC);
+
+CREATE INDEX idx_orders_return_requested
+    ON ORDERS (return_requested_at);
 
 CREATE INDEX idx_order_group_order
     ON ORDER_GROUP (order_id);

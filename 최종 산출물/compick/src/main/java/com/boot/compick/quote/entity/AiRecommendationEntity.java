@@ -64,4 +64,8 @@ public class AiRecommendationEntity {
 	public String getAiAnswerJson() {
 		return aiAnswerJson;
 	}
+
+	public void updateAiAnswerJson(String aiAnswerJson) {
+		this.aiAnswerJson = aiAnswerJson;
+	}
 }

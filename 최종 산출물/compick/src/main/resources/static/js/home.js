@@ -22,6 +22,17 @@ document.addEventListener("DOMContentLoaded", () => {
 	const formatPrice = (price) =>
 		new Intl.NumberFormat("ko-KR").format(Number(price)) + "원";
 
+	const popularTabs = document.querySelectorAll("[data-popular-tab]");
+	const popularPanels = document.querySelectorAll("[data-popular-panel]");
+	popularTabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			popularTabs.forEach((item) => item.classList.toggle("is-active", item === tab));
+			popularPanels.forEach((panel) => {
+				panel.hidden = panel.dataset.popularPanel !== tab.dataset.popularTab;
+			});
+		});
+	});
+
 	const showFeedback = (message, isError = false) => {
 		if (!feedback) {
 			return;
@@ -162,8 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		const cta = highlightDialog.querySelector("[data-dialog-cta]");
 
 		const openHighlightDialog = (card) => {
-			const requirement = card.querySelector(".ai-highlight-requirement")?.textContent ?? "";
-			const explanation = card.querySelector(".ai-highlight-explanation")?.textContent ?? "";
+			const requirement = card.dataset.keywords ?? "";
+			const explanation = card.dataset.explanation ?? "";
 			const price = card.querySelector(".ai-highlight-price")?.textContent ?? "";
 			const items = Array.from(card.querySelectorAll(".ai-highlight-items li"));
 

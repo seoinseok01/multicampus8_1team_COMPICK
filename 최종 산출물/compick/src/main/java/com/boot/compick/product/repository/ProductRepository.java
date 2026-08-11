@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 
 import com.boot.compick.product.entity.ProductEntity;
 
@@ -15,11 +16,12 @@ public interface ProductRepository
 	extends JpaRepository<ProductEntity, Long>, JpaSpecificationExecutor<ProductEntity> {
 
 	@EntityGraph(attributePaths = "category")
-	List<ProductEntity>
-		findTop4BySalesStatusAndStockQuantityGreaterThanOrderByRatingCountDescCreatedAtDesc(
-			String salesStatus,
-			int stockQuantity
-		);
+	List<ProductEntity> findByCategoryCategoryNameAndSalesStatusAndStockQuantityGreaterThan(
+		String categoryName,
+		String salesStatus,
+		int stockQuantity,
+		Pageable pageable
+	);
 
 	@Query(
 		"select distinct p.brand from ProductEntity p "

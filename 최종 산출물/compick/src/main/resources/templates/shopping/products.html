@@ -25,7 +25,7 @@
 				th:each="tab : ${categoryTabs}"
 				th:text="${tab.label}"
 				th:data-category="${tab.name}"
-				th:classappend="${tab.name == 'CPU'} ? 'is-active'">
+				th:classappend="${tab.name == initialCategory} ? 'is-active'">
 				CPU
 			</button>
 		</nav>
@@ -72,7 +72,7 @@
 				<div class="section-toolbar">
 					<div>
 						<h2 id="product-list-title">
-							<span data-category-label>CPU</span>
+							<span data-category-label th:text="${T(com.boot.compick.product.CategoryDisplay).labelOf(initialCategory)}">CPU</span>
 							<span data-product-count></span>
 						</h2>
 					</div>
@@ -92,7 +92,7 @@
 				<ul
 					class="product-grid"
 					data-product-grid
-					th:data-initial-category="CPU"
+					th:data-initial-category="${initialCategory}"
 					th:data-initial-page="${initialProducts.number}"
 					th:data-initial-has-next="${initialProducts.hasNext()}">
 					<li class="product-grid-item" th:each="product : ${initialProducts.content}">

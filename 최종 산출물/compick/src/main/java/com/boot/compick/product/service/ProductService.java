@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.boot.compick.product.dto.PopularProductResponse;
+import com.boot.compick.product.dto.PopularCategoryResponse;
+import com.boot.compick.product.CategoryDisplay;
 import com.boot.compick.product.dto.ProductDetailResponse;
 import com.boot.compick.product.dto.ProductFacetResponse;
 import com.boot.compick.product.dto.ProductListItemResponse;
@@ -28,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ProductService {
 
 	private static final String ON_SALE = "ON_SALE";
-	private static final int POPULAR_PRODUCT_LIMIT = 4;
+	private static final int POPULAR_PRODUCT_LIMIT = 5;
 
 	private static final Map<String, List<String>> CATEGORY_SPEC_FACETS = Map.of(
 		"CPU", List.of("Socket", "Core Count"),
@@ -114,15 +118,21 @@ public class ProductService {
 		return ProductDetailResponse.from(product);
 	}
 
-	public List<PopularProductResponse> findPopularProducts() {
-		return productRepository
-			.findTop4BySalesStatusAndStockQuantityGreaterThanOrderByRatingCountDescCreatedAtDesc(
-				ON_SALE,
-				0
-			)
-			.stream()
-			.limit(POPULAR_PRODUCT_LIMIT)
-			.map(this::toPopularProductResponse)
+	public List<PopularCategoryResponse> findPopularProductsByCategory() {
+		Pageable popularProducts = PageRequest.of(
+			0,
+			POPULAR_PRODUCT_LIMIT,
+			Sort.by(Sort.Direction.DESC, "ratingCount")
+				.and(Sort.by(Sort.Direction.DESC, "createdAt"))
+		);
+		return CategoryDisplay.CATEGORY_TABS.stream()
+			.map(tab -> new PopularCategoryResponse(
+				tab.name(),
+				tab.label(),
+				productRepository.findByCategoryCategoryNameAndSalesStatusAndStockQuantityGreaterThan(
+					tab.name(), ON_SALE, 0, popularProducts
+				).stream().map(this::toPopularProductResponse).toList()
+			))
 			.toList();
 	}
 

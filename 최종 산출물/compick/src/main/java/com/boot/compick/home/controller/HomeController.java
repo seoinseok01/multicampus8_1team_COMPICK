@@ -22,7 +22,7 @@ public class HomeController {
 
 	@GetMapping("/")
 	public String home(Model model) {
-		model.addAttribute("popularProducts", productService.findPopularProducts());
+		model.addAttribute("popularCategories", productService.findPopularProductsByCategory());
 		model.addAttribute("aiHighlights", quoteService.findRecentAiHighlights(AI_HIGHLIGHT_LIMIT));
 		return "home/index";
 	}
