@@ -17,6 +17,9 @@ public class SocialCredentialForm {
     @NotBlank(message = "비밀번호 확인을 입력해 주세요.")
     private String passwordConfirm;
 
-    @AssertTrue(message = "이용약관과 개인정보 처리방침에 동의해 주세요.")
+    @AssertTrue(message = "이용약관에 동의해 주세요.")
     private boolean termsAccepted;
+
+    @AssertTrue(message = "개인정보 처리방침에 동의해 주세요.")
+    private boolean privacyAccepted;
 }

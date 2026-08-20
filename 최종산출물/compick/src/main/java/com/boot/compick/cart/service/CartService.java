@@ -134,21 +134,17 @@ public class CartService {
 	public List<CartProductItemEntity> findSelectedProductItems(String loginId) {
 		Long memberId = activeMemberId(loginId);
 		return cartRepository.findByMemberId(memberId)
-			.map(cart -> cartProductItemRepository.findByCartCartIdOrderByCartProductItemIdDesc(cart.getCartId()))
-			.orElseGet(List::of)
-			.stream()
-			.filter(CartProductItemEntity::isSelected)
-			.toList();
+			.map(cart -> cartProductItemRepository
+				.findByCartCartIdAndSelectedOrderByCartProductItemIdDesc(cart.getCartId(), "Y"))
+			.orElseGet(List::of);
 	}
 
 	public List<CartQuoteItemEntity> findSelectedQuoteItems(String loginId) {
 		Long memberId = activeMemberId(loginId);
 		return cartRepository.findByMemberId(memberId)
-			.map(cart -> cartQuoteItemRepository.findByCartCartIdOrderByCartQuoteItemIdDesc(cart.getCartId()))
-			.orElseGet(List::of)
-			.stream()
-			.filter(CartQuoteItemEntity::isSelected)
-			.toList();
+			.map(cart -> cartQuoteItemRepository
+				.findByCartCartIdAndSelectedOrderByCartQuoteItemIdDesc(cart.getCartId(), "Y"))
+			.orElseGet(List::of);
 	}
 
 	@Transactional
@@ -200,7 +196,8 @@ public class CartService {
 				if (product == null) {
 					return null;
 				}
-				boolean purchasable = productLookupRepository.isPurchasable(item.getProductId(), item.getQuantity());
+				boolean purchasable = "ON_SALE".equals(product.getSalesStatus())
+					&& product.getStockQuantity() >= item.getQuantity();
 				return new CartProductLineResponse(
 					product.getProductId(),
 					product.getCategory().getCategoryName(),
@@ -225,20 +222,32 @@ public class CartService {
 			return List.of();
 		}
 
+		Map<Long, QuoteEntity> quotesById = quoteRepository
+			.findByQuoteIdIn(items.stream().map(CartQuoteItemEntity::getQuoteId).distinct().toList())
+			.stream()
+			.collect(Collectors.toMap(QuoteEntity::getQuoteId, quote -> quote));
+		Map<Long, ProductEntity> productsById = productRepository.findAllById(
+			quotesById.values().stream()
+				.flatMap(quote -> quote.getItems().stream())
+				.map(QuoteItemEntity::getProductId)
+				.distinct()
+				.toList()
+		).stream().collect(Collectors.toMap(ProductEntity::getProductId, product -> product));
+
 		return items.stream()
-			.map(item -> quoteRepository.findById(item.getQuoteId())
-				.map(quote -> toQuoteLine(quote, item))
-				.orElse(null))
+			.map(item -> {
+				QuoteEntity quote = quotesById.get(item.getQuoteId());
+				return quote == null ? null : toQuoteLine(quote, item, productsById);
+			})
 			.filter(Objects::nonNull)
 			.toList();
 	}
 
-	private CartQuoteLineResponse toQuoteLine(QuoteEntity quote, CartQuoteItemEntity cartItem) {
-		Map<Long, ProductEntity> productsById = productRepository
-			.findAllById(quote.getItems().stream().map(QuoteItemEntity::getProductId).toList())
-			.stream()
-			.collect(Collectors.toMap(ProductEntity::getProductId, product -> product));
-
+	private CartQuoteLineResponse toQuoteLine(
+		QuoteEntity quote,
+		CartQuoteItemEntity cartItem,
+		Map<Long, ProductEntity> productsById
+	) {
 		long unitTotal = quote.getItems().stream()
 			.mapToLong(item -> {
 				ProductEntity product = productsById.get(item.getProductId());

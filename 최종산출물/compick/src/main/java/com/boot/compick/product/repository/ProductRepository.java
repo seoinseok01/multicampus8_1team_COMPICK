@@ -32,6 +32,9 @@ public interface ProductRepository
 
 	Optional<ProductEntity> findFirstByProductName(String productName);
 
+	@EntityGraph(attributePaths = "category")
+	List<ProductEntity> findByProductNameIn(List<String> productNames);
+
 	@Query(
 		"select min(p.price) from ProductEntity p "
 			+ "where p.category.categoryName = :categoryName and p.salesStatus = 'ON_SALE'"

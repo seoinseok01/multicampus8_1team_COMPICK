@@ -23,6 +23,8 @@ public class JoinForm {
     @NotBlank(message = "휴대전화 번호를 입력해 주세요.")
     @Pattern(regexp = "^01[016789]-?\\d{3,4}-?\\d{4}$", message = "올바른 휴대전화 번호를 입력해 주세요.")
     private String phone;
-    @AssertTrue(message = "이용약관과 개인정보 처리방침에 동의해 주세요.")
+    @AssertTrue(message = "이용약관에 동의해 주세요.")
     private boolean termsAccepted;
+    @AssertTrue(message = "개인정보 처리방침에 동의해 주세요.")
+    private boolean privacyAccepted;
 }

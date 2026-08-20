@@ -70,15 +70,16 @@
                         </small>
                     </label>
                     <label class="check">
-                        <input type="checkbox" th:field="*{termsAccepted}">
-                        이용약관과
-                        <a class="policy-link" style="color:#2563eb;text-decoration:underline" th:href="@{/privacy-policy}" target="privacyPolicy" onclick="window.open(this.href,'privacyPolicy','width=760,height=820,scrollbars=yes');return false;">
-                            개인정보 처리방침
-                        </a>
-                        에 동의합니다.
+                        <input type="checkbox" th:field="*{termsAccepted}" data-policy-checkbox="terms">
+                        <a class="policy-link" style="color:#2563eb;text-decoration:underline" th:href="@{/terms-of-service}" data-policy-link="terms">이용약관</a>에 동의합니다.
                     </label>
                     <small class="error" th:errors="*{termsAccepted}">
                     </small>
+                    <label class="check">
+                        <input type="checkbox" th:field="*{privacyAccepted}" data-policy-checkbox="privacy">
+                        <a class="policy-link" style="color:#2563eb;text-decoration:underline" th:href="@{/privacy-policy}" data-policy-link="privacy">개인정보 처리방침</a>에 동의합니다.
+                    </label>
+                    <small class="error" th:errors="*{privacyAccepted}"></small>
                     <button class="primary">
                         가입하고 시작하기
                     </button>
@@ -117,5 +118,6 @@
             document.getElementById('sendEmailCode').onclick = async () => { const result=document.getElementById('emailResult'); try { const data=await verifyRequest('/api/email-verifications/send',{email:document.getElementById('email').value,purpose:'SIGN_UP'}); result.textContent=data.message; result.className='success'; } catch(e){result.textContent=e.message;result.className='error';} };
             document.getElementById('confirmEmailCode').onclick = async () => { const result=document.getElementById('emailResult'); try { const data=await verifyRequest('/api/email-verifications/confirm',{email:document.getElementById('email').value,purpose:'SIGN_UP',code:document.getElementById('emailCode').value}); result.textContent=data.message; result.className='success'; } catch(e){result.textContent=e.message;result.className='error';} };
         </script>
+        <script src="/js/member-policy-consent.js"></script>
     </body>
 </html>

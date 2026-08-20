@@ -19,6 +19,11 @@ public interface CartProductItemRepository
 
 	List<CartProductItemEntity> findByCartCartIdOrderByCartProductItemIdDesc(Long cartId);
 
+	List<CartProductItemEntity> findByCartCartIdAndSelectedOrderByCartProductItemIdDesc(
+		Long cartId,
+		String selected
+	);
+
 	@Query("""
 		select coalesce(sum(item.quantity), 0)
 		from CartProductItemEntity item

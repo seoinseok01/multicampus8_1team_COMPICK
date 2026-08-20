@@ -205,7 +205,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	const render = () => {
 		productList.innerHTML = "";
-		state.products.forEach((item) => productList.appendChild(renderProductLine(item)));
+		const productFragment = document.createDocumentFragment();
+		state.products.forEach((item) => productFragment.appendChild(renderProductLine(item)));
+		productList.appendChild(productFragment);
 		if (productEmpty) {
 			productEmpty.hidden = state.products.length > 0;
 		}
@@ -215,7 +217,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 		if (quoteList) {
 			quoteList.innerHTML = "";
-			state.quotes.forEach((item) => quoteList.appendChild(renderQuoteLine(item)));
+			const quoteFragment = document.createDocumentFragment();
+			state.quotes.forEach((item) => quoteFragment.appendChild(renderQuoteLine(item)));
+			quoteList.appendChild(quoteFragment);
 		}
 		if (quoteEmpty) {
 			quoteEmpty.hidden = state.quotes.length > 0;

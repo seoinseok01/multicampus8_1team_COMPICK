@@ -1,6 +1,10 @@
 package com.boot.compick.quote.service;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +59,17 @@ public class AiQuoteService {
 		AiRecommendationResponse response,
 		List<AiQuoteItem> items
 	) {
-		List<ProductEntity> products = items.stream().map(this::findProduct).toList();
+		List<String> productNames = items.stream().map(AiQuoteItem::name).distinct().toList();
+		Map<String, ProductEntity> productsByName = productRepository.findByProductNameIn(productNames).stream()
+			.collect(Collectors.toMap(
+				ProductEntity::getProductName,
+				Function.identity(),
+				(first, ignored) -> first,
+				LinkedHashMap::new
+			));
+		List<ProductEntity> products = items.stream()
+			.map(item -> findProduct(item, productsByName))
+			.toList();
 		if (products.isEmpty()) {
 			throw new IllegalArgumentException("저장할 AI 견적 상품이 없습니다.");
 		}
@@ -71,11 +85,12 @@ public class AiQuoteService {
 		return savedQuote;
 	}
 
-	private ProductEntity findProduct(AiQuoteItem item) {
-		return productRepository.findFirstByProductName(item.name())
-			.orElseThrow(() -> new IllegalArgumentException(
-				"상품 목록에서 추천 부품을 찾을 수 없습니다: " + item.name()
-			));
+	private ProductEntity findProduct(AiQuoteItem item, Map<String, ProductEntity> productsByName) {
+		ProductEntity product = productsByName.get(item.name());
+		if (product == null) {
+			throw new IllegalArgumentException("상품 목록에서 추천 부품을 찾을 수 없습니다: " + item.name());
+		}
+		return product;
 	}
 
 	private String quoteName(String requirements) {

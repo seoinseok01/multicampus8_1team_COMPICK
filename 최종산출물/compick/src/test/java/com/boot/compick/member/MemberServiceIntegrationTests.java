@@ -109,7 +109,8 @@ class MemberServiceIntegrationTests {
                         .param("email", "autologin@compick.com")
                         .param("name", "자동로그인")
                         .param("phone", "010-1234-5678")
-                        .param("termsAccepted", "true"))
+                        .param("termsAccepted", "true")
+                        .param("privacyAccepted", "true"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/"))
                 .andExpect(authenticated().withUsername("autologin01"));

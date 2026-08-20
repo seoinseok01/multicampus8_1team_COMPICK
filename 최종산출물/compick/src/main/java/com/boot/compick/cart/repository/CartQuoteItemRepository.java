@@ -12,4 +12,9 @@ public interface CartQuoteItemRepository extends JpaRepository<CartQuoteItemEnti
 	Optional<CartQuoteItemEntity> findByCartCartIdAndQuoteId(Long cartId, Long quoteId);
 
 	List<CartQuoteItemEntity> findByCartCartIdOrderByCartQuoteItemIdDesc(Long cartId);
+
+	List<CartQuoteItemEntity> findByCartCartIdAndSelectedOrderByCartQuoteItemIdDesc(
+		Long cartId,
+		String selected
+	);
 }

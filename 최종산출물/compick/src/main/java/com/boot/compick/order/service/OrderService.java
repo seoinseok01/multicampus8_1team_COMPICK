@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -82,13 +85,13 @@ public class OrderService {
 		Address address = addressRepository.findByIdAndMemberId(request.addressId(), memberId)
 			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "배송지를 찾을 수 없습니다."));
 
-		Map<Long, ProductEntity> productsById = productRepository.findAllById(
+		Map<Long, ProductEntity> selectedProductsById = productRepository.findAllById(
 			selectedProducts.stream().map(CartProductItemEntity::getProductId).toList()
-		).stream().collect(java.util.stream.Collectors.toMap(ProductEntity::getProductId, p -> p));
+		).stream().collect(Collectors.toMap(ProductEntity::getProductId, Function.identity()));
 
 		long productAmount = 0;
 		for (CartProductItemEntity item : selectedProducts) {
-			ProductEntity product = productsById.get(item.getProductId());
+			ProductEntity product = selectedProductsById.get(item.getProductId());
 			if (product != null) {
 				productAmount += product.getPrice() * item.getQuantity();
 			}
@@ -96,21 +99,31 @@ public class OrderService {
 
 		record QuoteBundle(QuoteEntity quote, CartQuoteItemEntity cartItem, Map<Long, ProductEntity> products, long total) {
 		}
+		Map<Long, QuoteEntity> quotesById = quoteRepository.findByQuoteIdIn(
+			selectedQuotes.stream().map(CartQuoteItemEntity::getQuoteId).distinct().toList()
+		).stream().collect(Collectors.toMap(QuoteEntity::getQuoteId, Function.identity()));
+		Map<Long, ProductEntity> quoteProductsById = productRepository.findAllById(
+			quotesById.values().stream()
+				.flatMap(quote -> quote.getItems().stream())
+				.map(QuoteItemEntity::getProductId)
+				.distinct()
+				.toList()
+		).stream().collect(Collectors.toMap(ProductEntity::getProductId, Function.identity()));
+
 		List<QuoteBundle> quoteBundles = selectedQuotes.stream()
-			.map(cartItem -> quoteRepository.findById(cartItem.getQuoteId())
-				.map(quote -> {
-					Map<Long, ProductEntity> items = productRepository.findAllById(
-						quote.getItems().stream().map(QuoteItemEntity::getProductId).toList()
-					).stream().collect(java.util.stream.Collectors.toMap(ProductEntity::getProductId, p -> p));
+			.map(cartItem -> {
+				QuoteEntity quote = quotesById.get(cartItem.getQuoteId());
+				if (quote == null) {
+					return null;
+				}
 					long total = quote.getItems().stream()
 						.mapToLong(qi -> {
-							ProductEntity p = items.get(qi.getProductId());
+							ProductEntity p = quoteProductsById.get(qi.getProductId());
 							return p == null ? 0L : p.getPrice() * qi.getQuantity();
 						}).sum() * cartItem.getQuantity();
-					return new QuoteBundle(quote, cartItem, items, total);
-				})
-				.orElse(null))
-			.filter(java.util.Objects::nonNull)
+				return new QuoteBundle(quote, cartItem, quoteProductsById, total);
+			})
+			.filter(Objects::nonNull)
 			.toList();
 
 		productAmount += quoteBundles.stream().mapToLong(QuoteBundle::total).sum();
@@ -130,7 +143,7 @@ public class OrderService {
 		);
 
 		for (CartProductItemEntity item : selectedProducts) {
-			ProductEntity product = productsById.get(item.getProductId());
+			ProductEntity product = selectedProductsById.get(item.getProductId());
 			if (product != null) {
 				order.addProductGroup(product.getProductId(), product.getProductName(), product.getPrice(), item.getQuantity());
 			}
